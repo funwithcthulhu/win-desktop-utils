@@ -7,6 +7,7 @@ use windows::Win32::System::Threading::CreateMutexW;
 
 use crate::error::{Error, Result};
 
+/// Guard that keeps the named single-instance mutex alive for the current process.
 #[derive(Debug)]
 pub struct InstanceGuard {
     handle: HANDLE,
@@ -27,6 +28,10 @@ fn to_wide_str(value: &str) -> Vec<u16> {
         .collect()
 }
 
+/// Attempts to acquire a named process-wide single-instance guard.
+///
+/// Returns `Ok(Some(InstanceGuard))` for the first instance and `Ok(None)` if another
+/// instance with the same `app_id` is already running.
 pub fn single_instance(app_id: &str) -> Result<Option<InstanceGuard>> {
     if app_id.trim().is_empty() {
         return Err(Error::InvalidInput("app_id cannot be empty"));

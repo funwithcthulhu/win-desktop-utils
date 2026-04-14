@@ -7,6 +7,7 @@ Windows-first desktop utility helpers for Rust apps.
 - `open_with_default(path)`
 - `open_url(url)`
 - `reveal_in_explorer(path)`
+- `move_to_recycle_bin(path)`
 - `single_instance(app_id)`
 - `roaming_app_data(app_name)`
 - `local_app_data(app_name)`
@@ -40,3 +41,4 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 - This crate is intended for Windows desktop tools.
 - Some functions launch external Windows shell behavior.
 - Elevation helpers may trigger UAC prompts.
+- `move_to_recycle_bin` requires an absolute path.

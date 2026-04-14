@@ -24,11 +24,13 @@ fn quote_arg(arg: &str) -> String {
     format!("\"{escaped}\"")
 }
 
+/// Returns `true` if the current process is running elevated.
 pub fn is_elevated() -> Result<bool> {
     let is_admin = unsafe { IsUserAnAdmin() };
     Ok(is_admin.as_bool())
 }
 
+/// Relaunches the current executable with elevation using the Windows `runas` shell verb.
 pub fn restart_as_admin(args: &[String]) -> Result<()> {
     let exe = std::env::current_exe()?;
     let exe_w = to_wide_os(exe.as_os_str());

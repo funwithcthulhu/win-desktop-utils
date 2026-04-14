@@ -2,11 +2,15 @@
 name = "win-desktop-utils"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.94"
 license = "MIT OR Apache-2.0"
 description = "Windows-first desktop utility helpers for Rust apps"
+readme = "README.md"
 repository = "https://github.com/funwithcthulhu/win-desktop-utils"
 homepage = "https://github.com/funwithcthulhu/win-desktop-utils"
 documentation = "https://docs.rs/win-desktop-utils"
+keywords = ["windows", "desktop", "win32", "shell"]
+categories = ["os::windows-apis", "api-bindings"]
 
 [dependencies]
 windows = { version = "0.62.2", features = [
