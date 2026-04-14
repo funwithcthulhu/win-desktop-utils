@@ -25,6 +25,7 @@ Published crate. Windows-focused.
 
 ## Example
 
+```rust
 fn main() -> Result<(), win_desktop_utils::Error> {
     win_desktop_utils::open_url("https://www.rust-lang.org")?;
 
@@ -38,6 +39,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
     Ok(())
 }
+```
 
 ## Notes
 
