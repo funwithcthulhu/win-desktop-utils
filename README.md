@@ -2,6 +2,9 @@
 
 Windows-first desktop utility helpers for Rust apps.
 
+Published on crates.io: https://crates.io/crates/win-desktop-utils  
+API docs: https://docs.rs/win-desktop-utils
+
 ## Current features
 
 - `open_with_default(path)`
@@ -18,7 +21,7 @@ Windows-first desktop utility helpers for Rust apps.
 
 ## Status
 
-Early local crate. Windows-focused. Not published yet.
+Published crate. Windows-focused.
 
 ## Example
 
