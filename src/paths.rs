@@ -1,0 +1,37 @@
+use std::fs;
+use std::path::PathBuf;
+
+use crate::error::{Error, Result};
+
+pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
+    if app_name.trim().is_empty() {
+        return Err(Error::InvalidInput("app_name cannot be empty"));
+    }
+
+    let base = std::env::var_os("APPDATA").ok_or(Error::Unsupported("APPDATA is not set"))?;
+
+    Ok(PathBuf::from(base).join(app_name))
+}
+
+pub fn local_app_data(app_name: &str) -> Result<PathBuf> {
+    if app_name.trim().is_empty() {
+        return Err(Error::InvalidInput("app_name cannot be empty"));
+    }
+
+    let base =
+        std::env::var_os("LOCALAPPDATA").ok_or(Error::Unsupported("LOCALAPPDATA is not set"))?;
+
+    Ok(PathBuf::from(base).join(app_name))
+}
+
+pub fn ensure_roaming_app_data(app_name: &str) -> Result<PathBuf> {
+    let path = roaming_app_data(app_name)?;
+    fs::create_dir_all(&path)?;
+    Ok(path)
+}
+
+pub fn ensure_local_app_data(app_name: &str) -> Result<PathBuf> {
+    let path = local_app_data(app_name)?;
+    fs::create_dir_all(&path)?;
+    Ok(path)
+}
