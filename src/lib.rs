@@ -1,9 +1,19 @@
 //! Windows-first desktop utility helpers for Rust apps.
 //!
-//! This crate provides small, focused helpers for common Windows desktop-app tasks:
+//! This crate provides small helpers for common Windows desktop-app tasks:
 //! opening files and URLs, revealing items in Explorer, sending files to the
 //! Recycle Bin, enforcing single-instance behavior, resolving app-data
 //! directories, and dealing with elevation.
+//!
+//! # Example
+//!
+//! ```
+//! fn main() -> Result<(), win_desktop_utils::Error> {
+//!     let path = win_desktop_utils::local_app_data("demo-app")?;
+//!     assert!(path.ends_with("demo-app"));
+//!     Ok(())
+//! }
+//! ```
 
 pub mod elevation;
 pub mod error;
