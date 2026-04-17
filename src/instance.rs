@@ -10,6 +10,7 @@ use crate::error::{Error, Result};
 /// Guard that keeps the named single-instance mutex alive for the current process.
 ///
 /// Dropping this value releases the underlying mutex handle.
+#[must_use = "keep this guard alive for as long as you want to hold the single-instance lock"]
 #[derive(Debug)]
 pub struct InstanceGuard {
     handle: HANDLE,
@@ -38,10 +39,23 @@ fn to_wide_str(value: &str) -> Vec<u16> {
 /// The mutex name is derived from `app_id` using a `Local\...` namespace, so the
 /// single-instance behavior is scoped to the current Windows session.
 ///
+/// Keep the returned guard alive for as long as the current process should continue
+/// to own the single-instance lock.
+///
 /// # Errors
 ///
 /// Returns [`Error::InvalidInput`] if `app_id` is empty or whitespace only.
 /// Returns [`Error::WindowsApi`] if `CreateMutexW` fails.
+///
+/// # Examples
+///
+/// ```
+/// let app_id = format!("demo-app-{}", std::process::id());
+/// let guard = win_desktop_utils::single_instance(&app_id)?;
+/// assert!(guard.is_some());
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+#[must_use = "store the returned guard for as long as the process should be considered the active instance"]
 pub fn single_instance(app_id: &str) -> Result<Option<InstanceGuard>> {
     if app_id.trim().is_empty() {
         return Err(Error::InvalidInput("app_id cannot be empty"));

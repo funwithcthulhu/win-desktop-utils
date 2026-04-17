@@ -5,6 +5,10 @@ pub enum Error {
     Unsupported(&'static str),
     /// The caller supplied invalid input.
     InvalidInput(&'static str),
+    /// A path was required to be absolute but was not.
+    PathNotAbsolute,
+    /// A required path does not exist.
+    PathDoesNotExist,
     /// An underlying I/O operation failed.
     Io(std::io::Error),
     /// A Windows API call failed.
@@ -24,6 +28,8 @@ impl std::fmt::Display for Error {
         match self {
             Self::Unsupported(msg) => write!(f, "unsupported operation: {msg}"),
             Self::InvalidInput(msg) => write!(f, "invalid input: {msg}"),
+            Self::PathNotAbsolute => write!(f, "path must be absolute"),
+            Self::PathDoesNotExist => write!(f, "path does not exist"),
             Self::Io(err) => write!(f, "I/O error: {err}"),
             Self::WindowsApi { context, code } => {
                 write!(f, "Windows API error in {context} (code {code})")

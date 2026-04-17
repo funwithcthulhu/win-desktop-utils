@@ -2,22 +2,30 @@
 
 Windows-first desktop utility helpers for Rust apps.
 
-Published on crates.io: https://crates.io/crates/win-desktop-utils
-API docs: https://docs.rs/win-desktop-utils
+`win-desktop-utils` provides small, focused helpers for common Windows desktop-app tasks without forcing consumers to work directly with raw Win32 shell and mutex APIs.
 
-## What this crate does
+## Scope
 
-`win-desktop-utils` provides small, focused helpers for common Windows desktop-app tasks:
+This crate currently provides helpers to:
 
-- open files and directories with the default shell handler
-- open URLs
-- reveal files in Explorer
-- send files or directories to the Recycle Bin
+- open an existing file or directory with the default Windows handler
+- open a URL with the default browser or registered handler
+- reveal an existing path in Explorer
+- move an existing file or directory to the Recycle Bin
 - enforce single-instance behavior with a named mutex
 - resolve per-user roaming and local app-data paths
-- check elevation status and relaunch as admin
+- create per-user roaming and local app-data paths if needed
+- check whether the current process is elevated
+- relaunch the current executable as administrator
 
-This crate is intended for Windows desktop applications and utilities. Some functions launch external shell behavior, and elevation helpers may trigger UAC prompts.
+This crate supports Windows only.
+
+## Installation
+
+```toml
+[dependencies]
+win-desktop-utils = "0.2"
+```
 
 ## Current API
 
@@ -37,28 +45,58 @@ This crate is intended for Windows desktop applications and utilities. Some func
 
 ```rust
 fn main() -> Result<(), win_desktop_utils::Error> {
-    win_desktop_utils::open_url("https://www.rust-lang.org")?;
+    let _guard = match win_desktop_utils::single_instance("demo-app")? {
+        Some(guard) => guard,
+        None => {
+            println!("already running");
+            return Ok(());
+        }
+    };
 
     let local = win_desktop_utils::ensure_local_app_data("demo-app")?;
     println!("local app dir: {}", local.display());
-
-    match win_desktop_utils::single_instance("demo-app")? {
-        Some(_guard) => println!("first instance"),
-        None => println!("already running"),
-    }
 
     Ok(())
 }
 ```
 
+## Error behavior
+
+The crate exposes a small public error type with explicit path-related cases.
+
+Notable error distinctions include:
+
+- `Error::InvalidInput(...)` for empty or malformed input
+- `Error::PathNotAbsolute` when an operation requires an absolute path
+- `Error::PathDoesNotExist` when an operation requires an existing path
+- `Error::WindowsApi { .. }` when a Win32 or shell operation reports failure
+- `Error::Io(...)` for underlying I/O failures
+
 ## Behavior notes
 
-- `open_with_default` and `open_url` delegate to the Windows shell.
-- `reveal_in_explorer` starts `explorer.exe` and asks it to select the provided path.
-- `move_to_recycle_bin` requires an absolute path and returns an error if the path does not exist.
-- `single_instance` uses a `Local\...` named mutex, so it is scoped to the current Windows session.
+- `open_with_default` requires a non-empty existing path.
+- `open_url` only checks that the URL string is non-empty after trimming; deeper URL validation is delegated to the Windows shell.
+- `reveal_in_explorer` requires an existing path and launches `explorer.exe`.
+- `move_to_recycle_bin` requires an absolute existing path and uses `SHFileOperationW` with undo enabled.
+- `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
+- Keep the returned `InstanceGuard` alive for as long as the process should own the single-instance lock.
 - `restart_as_admin` starts a new elevated instance of the current executable and does not terminate the current process.
+
+## Quality
+
+The crate includes:
+
+- automated tests for validation and single-instance behavior
+- doctest examples in the public modules
+- Windows CI via GitHub Actions
+- docs published on docs.rs
 
 ## Status
 
-Published crate. Early-stage but usable.
+Early-stage crate, but tested and usable.
+
+## Links
+
+- Crates.io: https://crates.io/crates/win-desktop-utils
+- Docs: https://docs.rs/win-desktop-utils
+- Repository: https://github.com/funwithcthulhu/win-desktop-utils

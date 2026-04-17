@@ -1,5 +1,4 @@
 use std::ffi::OsStr;
-use std::io;
 use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
 use std::process::Command;
@@ -68,12 +67,24 @@ fn shell_open_raw(target: &OsStr) -> Result<()> {
 /// # Errors
 ///
 /// Returns [`Error::InvalidInput`] if `target` is empty.
+/// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::open_with_default(r"C:\Windows\notepad.exe")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
 pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
     let path = target.as_ref();
 
     if path.as_os_str().is_empty() {
         return Err(Error::InvalidInput("target cannot be empty"));
+    }
+
+    if !path.exists() {
+        return Err(Error::PathDoesNotExist);
     }
 
     shell_open_raw(path.as_os_str())
@@ -88,6 +99,13 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
 ///
 /// Returns [`Error::InvalidInput`] if `url` is empty or whitespace only.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::open_url("https://www.rust-lang.org")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
 pub fn open_url(url: &str) -> Result<()> {
     if url.trim().is_empty() {
         return Err(Error::InvalidInput("url cannot be empty"));
@@ -103,12 +121,24 @@ pub fn open_url(url: &str) -> Result<()> {
 /// # Errors
 ///
 /// Returns [`Error::InvalidInput`] if `path` is empty.
+/// Returns [`Error::PathDoesNotExist`] if the path does not exist.
 /// Returns [`Error::Io`] if spawning `explorer.exe` fails.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::reveal_in_explorer(r"C:\Windows\notepad.exe")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
 pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
 
     if path.as_os_str().is_empty() {
         return Err(Error::InvalidInput("path cannot be empty"));
+    }
+
+    if !path.exists() {
+        return Err(Error::PathDoesNotExist);
     }
 
     Command::new("explorer.exe")
@@ -127,9 +157,19 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `path` is empty or not absolute.
-/// Returns [`Error::Io`] if the path does not exist.
+/// Returns [`Error::InvalidInput`] if `path` is empty.
+/// Returns [`Error::PathNotAbsolute`] if the path is not absolute.
+/// Returns [`Error::PathDoesNotExist`] if the path does not exist.
 /// Returns [`Error::WindowsApi`] if the shell operation fails or is aborted.
+///
+/// # Examples
+///
+/// ```no_run
+/// let path = std::env::current_dir()?.join("temporary-file.txt");
+/// std::fs::write(&path, "temporary file")?;
+/// win_desktop_utils::move_to_recycle_bin(&path)?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
 
@@ -138,14 +178,11 @@ pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
     }
 
     if !path.is_absolute() {
-        return Err(Error::InvalidInput("path must be absolute"));
+        return Err(Error::PathNotAbsolute);
     }
 
     if !path.exists() {
-        return Err(Error::Io(io::Error::new(
-            io::ErrorKind::NotFound,
-            "path does not exist",
-        )));
+        return Err(Error::PathDoesNotExist);
     }
 
     let from_w = to_double_null_path(path);

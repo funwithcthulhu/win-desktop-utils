@@ -12,6 +12,7 @@
 //!
 //! This crate is intended for Windows desktop applications and utilities.
 //! Some functions launch external shell behavior or may trigger a UAC prompt.
+//! This crate supports Windows only.
 //!
 //! # Example
 //!
@@ -29,15 +30,28 @@
 //! }
 //! ```
 
+#[cfg(not(windows))]
+compile_error!("win-desktop-utils supports Windows only.");
+
+#[cfg(windows)]
 pub mod elevation;
+#[cfg(windows)]
 pub mod error;
+#[cfg(windows)]
 pub mod instance;
+#[cfg(windows)]
 pub mod paths;
+#[cfg(windows)]
 pub mod shell;
 
+#[cfg(windows)]
 pub use error::{Error, Result};
 
+#[cfg(windows)]
 pub use elevation::{is_elevated, restart_as_admin};
+#[cfg(windows)]
 pub use instance::{single_instance, InstanceGuard};
+#[cfg(windows)]
 pub use paths::{ensure_local_app_data, ensure_roaming_app_data, local_app_data, roaming_app_data};
+#[cfg(windows)]
 pub use shell::{move_to_recycle_bin, open_url, open_with_default, reveal_in_explorer};

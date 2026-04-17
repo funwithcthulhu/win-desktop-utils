@@ -12,6 +12,14 @@ use crate::error::{Error, Result};
 ///
 /// Returns [`Error::InvalidInput`] if `app_name` is empty or whitespace only.
 /// Returns [`Error::Unsupported`] if `APPDATA` is not available.
+///
+/// # Examples
+///
+/// ```
+/// let path = win_desktop_utils::roaming_app_data("demo-app")?;
+/// assert!(path.ends_with("demo-app"));
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
 pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
     if app_name.trim().is_empty() {
         return Err(Error::InvalidInput("app_name cannot be empty"));
@@ -31,6 +39,14 @@ pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
 ///
 /// Returns [`Error::InvalidInput`] if `app_name` is empty or whitespace only.
 /// Returns [`Error::Unsupported`] if `LOCALAPPDATA` is not available.
+///
+/// # Examples
+///
+/// ```
+/// let path = win_desktop_utils::local_app_data("demo-app")?;
+/// assert!(path.ends_with("demo-app"));
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
 pub fn local_app_data(app_name: &str) -> Result<PathBuf> {
     if app_name.trim().is_empty() {
         return Err(Error::InvalidInput("app_name cannot be empty"));
@@ -49,6 +65,15 @@ pub fn local_app_data(app_name: &str) -> Result<PathBuf> {
 /// # Errors
 ///
 /// Propagates errors from [`roaming_app_data`] and directory creation.
+///
+/// # Examples
+///
+/// ```
+/// let path = win_desktop_utils::ensure_roaming_app_data("demo-app")?;
+/// assert!(path.ends_with("demo-app"));
+/// assert!(path.exists());
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
 pub fn ensure_roaming_app_data(app_name: &str) -> Result<PathBuf> {
     let path = roaming_app_data(app_name)?;
     fs::create_dir_all(&path)?;
@@ -62,6 +87,15 @@ pub fn ensure_roaming_app_data(app_name: &str) -> Result<PathBuf> {
 /// # Errors
 ///
 /// Propagates errors from [`local_app_data`] and directory creation.
+///
+/// # Examples
+///
+/// ```
+/// let path = win_desktop_utils::ensure_local_app_data("demo-app")?;
+/// assert!(path.ends_with("demo-app"));
+/// assert!(path.exists());
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
 pub fn ensure_local_app_data(app_name: &str) -> Result<PathBuf> {
     let path = local_app_data(app_name)?;
     fs::create_dir_all(&path)?;
