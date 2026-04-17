@@ -1,3 +1,5 @@
+use std::ffi::OsString;
+
 fn main() {
     if win_desktop_utils::is_elevated().unwrap() {
         println!("already elevated");
@@ -6,6 +8,7 @@ fn main() {
         std::io::stdin().read_line(&mut s).unwrap();
     } else {
         println!("requesting elevation");
-        win_desktop_utils::restart_as_admin(&[]).unwrap();
+        let args: [OsString; 0] = [];
+        win_desktop_utils::restart_as_admin(&args).unwrap();
     }
 }

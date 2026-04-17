@@ -1,16 +1,30 @@
 //! Windows-first desktop utility helpers for Rust apps.
 //!
 //! This crate provides small helpers for common Windows desktop-app tasks:
-//! opening files and URLs, revealing items in Explorer, sending files to the
-//! Recycle Bin, enforcing single-instance behavior, resolving app-data
-//! directories, and dealing with elevation.
+//!
+//! - opening files and directories with the default shell handler
+//! - opening URLs
+//! - revealing items in Explorer
+//! - sending files or directories to the Recycle Bin
+//! - enforcing single-instance behavior
+//! - resolving per-user app-data directories
+//! - checking elevation and relaunching as admin
+//!
+//! This crate is intended for Windows desktop applications and utilities.
+//! Some functions launch external shell behavior or may trigger a UAC prompt.
 //!
 //! # Example
 //!
 //! ```
 //! fn main() -> Result<(), win_desktop_utils::Error> {
-//!     let path = win_desktop_utils::local_app_data("demo-app")?;
-//!     assert!(path.ends_with("demo-app"));
+//!     let local = win_desktop_utils::local_app_data("demo-app")?;
+//!     assert!(local.ends_with("demo-app"));
+//!
+//!     match win_desktop_utils::single_instance("demo-app")? {
+//!         Some(_guard) => {}
+//!         None => {}
+//!     }
+//!
 //!     Ok(())
 //! }
 //! ```

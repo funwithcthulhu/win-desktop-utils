@@ -5,7 +5,13 @@ use crate::error::{Error, Result};
 
 /// Returns the per-user roaming app-data directory for the given app name.
 ///
-/// This does not create the directory.
+/// This function reads the `APPDATA` environment variable and appends `app_name`.
+/// It does not create the directory.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `app_name` is empty or whitespace only.
+/// Returns [`Error::Unsupported`] if `APPDATA` is not available.
 pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
     if app_name.trim().is_empty() {
         return Err(Error::InvalidInput("app_name cannot be empty"));
@@ -18,7 +24,13 @@ pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
 
 /// Returns the per-user local app-data directory for the given app name.
 ///
-/// This does not create the directory.
+/// This function reads the `LOCALAPPDATA` environment variable and appends `app_name`.
+/// It does not create the directory.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `app_name` is empty or whitespace only.
+/// Returns [`Error::Unsupported`] if `LOCALAPPDATA` is not available.
 pub fn local_app_data(app_name: &str) -> Result<PathBuf> {
     if app_name.trim().is_empty() {
         return Err(Error::InvalidInput("app_name cannot be empty"));
@@ -31,6 +43,12 @@ pub fn local_app_data(app_name: &str) -> Result<PathBuf> {
 }
 
 /// Returns the roaming app-data directory for the given app name and creates it if needed.
+///
+/// This is equivalent to calling [`roaming_app_data`] and then `create_dir_all` on the result.
+///
+/// # Errors
+///
+/// Propagates errors from [`roaming_app_data`] and directory creation.
 pub fn ensure_roaming_app_data(app_name: &str) -> Result<PathBuf> {
     let path = roaming_app_data(app_name)?;
     fs::create_dir_all(&path)?;
@@ -38,6 +56,12 @@ pub fn ensure_roaming_app_data(app_name: &str) -> Result<PathBuf> {
 }
 
 /// Returns the local app-data directory for the given app name and creates it if needed.
+///
+/// This is equivalent to calling [`local_app_data`] and then `create_dir_all` on the result.
+///
+/// # Errors
+///
+/// Propagates errors from [`local_app_data`] and directory creation.
 pub fn ensure_local_app_data(app_name: &str) -> Result<PathBuf> {
     let path = local_app_data(app_name)?;
     fs::create_dir_all(&path)?;

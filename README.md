@@ -2,10 +2,24 @@
 
 Windows-first desktop utility helpers for Rust apps.
 
-Published on crates.io: https://crates.io/crates/win-desktop-utils  
+Published on crates.io: https://crates.io/crates/win-desktop-utils
 API docs: https://docs.rs/win-desktop-utils
 
-## Current features
+## What this crate does
+
+`win-desktop-utils` provides small, focused helpers for common Windows desktop-app tasks:
+
+- open files and directories with the default shell handler
+- open URLs
+- reveal files in Explorer
+- send files or directories to the Recycle Bin
+- enforce single-instance behavior with a named mutex
+- resolve per-user roaming and local app-data paths
+- check elevation status and relaunch as admin
+
+This crate is intended for Windows desktop applications and utilities. Some functions launch external shell behavior, and elevation helpers may trigger UAC prompts.
+
+## Current API
 
 - `open_with_default(path)`
 - `open_url(url)`
@@ -18,10 +32,6 @@ API docs: https://docs.rs/win-desktop-utils
 - `ensure_local_app_data(app_name)`
 - `is_elevated()`
 - `restart_as_admin(args)`
-
-## Status
-
-Published crate. Windows-focused.
 
 ## Example
 
@@ -41,9 +51,14 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 }
 ```
 
-## Notes
+## Behavior notes
 
-- This crate is intended for Windows desktop tools.
-- Some functions launch external Windows shell behavior.
-- Elevation helpers may trigger UAC prompts.
-- `move_to_recycle_bin` requires an absolute path.
+- `open_with_default` and `open_url` delegate to the Windows shell.
+- `reveal_in_explorer` starts `explorer.exe` and asks it to select the provided path.
+- `move_to_recycle_bin` requires an absolute path and returns an error if the path does not exist.
+- `single_instance` uses a `Local\...` named mutex, so it is scoped to the current Windows session.
+- `restart_as_admin` starts a new elevated instance of the current executable and does not terminate the current process.
+
+## Status
+
+Published crate. Early-stage but usable.

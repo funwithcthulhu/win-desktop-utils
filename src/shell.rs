@@ -6,7 +6,7 @@ use std::process::Command;
 
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::Shell::{SHFileOperationW, ShellExecuteW, SHFILEOPSTRUCTW};
+use windows::Win32::UI::Shell::{SHFILEOPSTRUCTW, SHFileOperationW, ShellExecuteW};
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
 use crate::error::{Error, Result};
@@ -64,6 +64,11 @@ fn shell_open_raw(target: &OsStr) -> Result<()> {
 }
 
 /// Opens a file or directory with the user's default Windows handler.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `target` is empty.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
     let path = target.as_ref();
 
@@ -75,6 +80,14 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
 }
 
 /// Opens a URL with the user's default browser or registered handler.
+///
+/// This function checks only that the input is non-empty after trimming whitespace.
+/// URL validation is otherwise delegated to the Windows shell.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `url` is empty or whitespace only.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 pub fn open_url(url: &str) -> Result<()> {
     if url.trim().is_empty() {
         return Err(Error::InvalidInput("url cannot be empty"));
@@ -84,6 +97,13 @@ pub fn open_url(url: &str) -> Result<()> {
 }
 
 /// Opens Explorer and selects the requested path.
+///
+/// This function starts `explorer.exe` with `/select,` and the provided path.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `path` is empty.
+/// Returns [`Error::Io`] if spawning `explorer.exe` fails.
 pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
 
@@ -91,9 +111,10 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
         return Err(Error::InvalidInput("path cannot be empty"));
     }
 
-    let arg = format!("/select,{}", path.display());
-
-    Command::new("explorer.exe").arg(arg).spawn()?;
+    Command::new("explorer.exe")
+        .arg("/select,")
+        .arg(path)
+        .spawn()?;
 
     Ok(())
 }
@@ -101,6 +122,14 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
 /// Sends a file or directory to the Windows Recycle Bin.
 ///
 /// The path must be absolute and must exist.
+///
+/// This function uses `SHFileOperationW` with `FO_DELETE` and `FOF_ALLOWUNDO`.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `path` is empty or not absolute.
+/// Returns [`Error::Io`] if the path does not exist.
+/// Returns [`Error::WindowsApi`] if the shell operation fails or is aborted.
 pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
 
