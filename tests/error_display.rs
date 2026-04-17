@@ -12,7 +12,10 @@ fn display_for_windows_api_includes_context_and_code() {
         context: "ShellExecuteW",
         code: 5,
     };
-    assert_eq!(err.to_string(), "Windows API error in ShellExecuteW (code 5)");
+    assert_eq!(
+        err.to_string(),
+        "Windows API error in ShellExecuteW (code 5)"
+    );
 }
 
 #[test]

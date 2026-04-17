@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use win_desktop_utils::{move_to_recycle_bin, open_url, open_with_default, reveal_in_explorer, single_instance, Error};
+use win_desktop_utils::{
+    move_to_recycle_bin, open_url, open_with_default, reveal_in_explorer, single_instance, Error,
+};
 
 #[test]
 fn open_with_default_rejects_empty_path() {
