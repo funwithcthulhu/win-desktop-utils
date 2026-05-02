@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use win_desktop_utils::{
-    move_to_recycle_bin, open_url, open_with_default, reveal_in_explorer, single_instance,
-    single_instance_with_scope, Error, InstanceScope,
+    move_to_recycle_bin, open_url, open_with_default, open_with_verb, reveal_in_explorer,
+    single_instance, single_instance_with_scope, Error, InstanceScope,
 };
 
 #[test]
@@ -16,6 +16,31 @@ fn open_with_default_rejects_empty_path() {
 fn open_with_default_rejects_missing_path() {
     let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-open.tmp");
     let result = open_with_default(path);
+    assert!(matches!(result, Err(Error::PathDoesNotExist)));
+}
+
+#[test]
+fn open_with_verb_rejects_empty_verb() {
+    let result = open_with_verb("", r"C:\Windows\notepad.exe");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn open_with_verb_rejects_nul_bytes_in_verb() {
+    let result = open_with_verb("pro\0perties", r"C:\Windows\notepad.exe");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn open_with_verb_rejects_empty_path() {
+    let result = open_with_verb("open", PathBuf::new());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn open_with_verb_rejects_missing_path() {
+    let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-open-verb.tmp");
+    let result = open_with_verb("open", path);
     assert!(matches!(result, Err(Error::PathDoesNotExist)));
 }
 

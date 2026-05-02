@@ -24,6 +24,7 @@
 //! # Current API
 //!
 //! - [`open_with_default`]
+//! - [`open_with_verb`]
 //! - [`open_url`]
 //! - [`reveal_in_explorer`]
 //! - [`move_to_recycle_bin`]
@@ -59,6 +60,7 @@
 //! # Behavior Notes
 //!
 //! - [`open_with_default`] requires a non-empty existing path.
+//! - [`open_with_verb`] uses `ShellExecuteW` with the requested shell verb.
 //! - [`open_url`] trims surrounding whitespace before delegating to the Windows shell.
 //! - [`reveal_in_explorer`] requires an existing path and launches `explorer.exe`.
 //! - [`move_to_recycle_bin`] requires an absolute existing path and uses `IFileOperation`
@@ -96,4 +98,6 @@ pub use instance::{single_instance, single_instance_with_scope, InstanceGuard, I
 #[cfg(windows)]
 pub use paths::{ensure_local_app_data, ensure_roaming_app_data, local_app_data, roaming_app_data};
 #[cfg(windows)]
-pub use shell::{move_to_recycle_bin, open_url, open_with_default, reveal_in_explorer};
+pub use shell::{
+    move_to_recycle_bin, open_url, open_with_default, open_with_verb, reveal_in_explorer,
+};

@@ -46,6 +46,20 @@ fn normalize_url(url: &str) -> Result<&str> {
     Ok(trimmed)
 }
 
+fn normalize_shell_verb(verb: &str) -> Result<&str> {
+    let trimmed = verb.trim();
+
+    if trimmed.is_empty() {
+        return Err(Error::InvalidInput("verb cannot be empty"));
+    }
+
+    if trimmed.contains('\0') {
+        return Err(Error::InvalidInput("verb cannot contain NUL bytes"));
+    }
+
+    Ok(trimmed)
+}
+
 struct ComApartment;
 
 impl ComApartment {
@@ -71,8 +85,8 @@ impl Drop for ComApartment {
     }
 }
 
-fn shell_open_raw(target: &OsStr) -> Result<()> {
-    let operation = to_wide_str("open");
+fn shell_execute_raw(verb: &str, target: &OsStr) -> Result<()> {
+    let operation = to_wide_str(verb);
     let target_w = to_wide_os(target);
 
     let result = unsafe {
@@ -182,6 +196,29 @@ where
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
 pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
+    open_with_verb("open", target)
+}
+
+/// Opens a file or directory using a specific Windows shell verb.
+///
+/// Common verbs include `open`, `edit`, `print`, and `properties`, depending on
+/// what the target path's registered handler supports.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `verb` is empty, whitespace only, or contains
+/// NUL bytes, or if `target` is empty.
+/// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::open_with_verb("properties", r"C:\Windows\notepad.exe")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn open_with_verb(verb: &str, target: impl AsRef<Path>) -> Result<()> {
+    let verb = normalize_shell_verb(verb)?;
     let path = target.as_ref();
 
     if path.as_os_str().is_empty() {
@@ -192,7 +229,7 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
         return Err(Error::PathDoesNotExist);
     }
 
-    shell_open_raw(path.as_os_str())
+    shell_execute_raw(verb, path.as_os_str())
 }
 
 /// Opens a URL with the user's default browser or registered handler.
@@ -213,7 +250,7 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
 /// ```
 pub fn open_url(url: &str) -> Result<()> {
     let url = normalize_url(url)?;
-    shell_open_raw(OsStr::new(url))
+    shell_execute_raw("open", OsStr::new(url))
 }
 
 /// Opens Explorer and selects the requested path.
@@ -294,7 +331,7 @@ pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::normalize_url;
+    use super::{normalize_shell_verb, normalize_url};
 
     #[test]
     fn normalize_url_rejects_empty_string() {
@@ -328,6 +365,41 @@ mod tests {
         assert!(matches!(
             result,
             Err(crate::Error::InvalidInput("url cannot contain NUL bytes"))
+        ));
+    }
+
+    #[test]
+    fn normalize_shell_verb_rejects_empty_string() {
+        let result = normalize_shell_verb("");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("verb cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn normalize_shell_verb_rejects_whitespace_only() {
+        let result = normalize_shell_verb("   ");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("verb cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn normalize_shell_verb_trims_surrounding_whitespace() {
+        assert_eq!(
+            normalize_shell_verb("  properties  ").unwrap(),
+            "properties"
+        );
+    }
+
+    #[test]
+    fn normalize_shell_verb_rejects_nul_bytes() {
+        let result = normalize_shell_verb("pro\0perties");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("verb cannot contain NUL bytes"))
         ));
     }
 }

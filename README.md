@@ -49,6 +49,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 ## Current API
 
 - `open_with_default(path)`
+- `open_with_verb(verb, path)`
 - `open_url(url)`
 - `reveal_in_explorer(path)`
 - `move_to_recycle_bin(path)`
@@ -68,6 +69,7 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 
 - app-data path lookup and creation
 - URL opening and Explorer reveal helpers
+- shell verb execution for files and directories
 - Recycle Bin integration
 - elevation checks and relaunch
 - single-instance enforcement
@@ -94,6 +96,7 @@ Notable error distinctions include:
 ## Behavior notes
 
 - `open_with_default` requires a non-empty existing path.
+- `open_with_verb` requires a non-empty existing path and a non-empty shell verb such as `open` or `properties`.
 - `open_url` trims surrounding whitespace before delegating to the Windows shell.
 - `reveal_in_explorer` requires an existing path and launches `explorer.exe`.
 - `move_to_recycle_bin` requires an absolute existing path and uses `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
