@@ -1,73 +1,18 @@
 //! Elevation helpers for checking admin state and relaunching through UAC.
 
 use std::ffi::{OsStr, OsString};
-use std::os::windows::ffi::OsStrExt;
 
-use windows::core::PCWSTR;
-use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::Shell::{IsUserAnAdmin, ShellExecuteW};
-use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+use windows::Win32::UI::Shell::IsUserAnAdmin;
 
 use crate::error::{Error, Result};
-
-fn to_wide_os(value: &OsStr) -> Vec<u16> {
-    value.encode_wide().chain(std::iter::once(0)).collect()
-}
-
-fn to_wide_str(value: &str) -> Vec<u16> {
-    OsStr::new(value)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
-
-fn quote_arg(arg: &OsStr) -> String {
-    let text = arg.to_string_lossy();
-    let mut quoted = String::with_capacity(text.len() + 2);
-    let mut trailing_backslashes = 0usize;
-
-    quoted.push('"');
-
-    for ch in text.chars() {
-        match ch {
-            '\\' => trailing_backslashes += 1,
-            '"' => {
-                for _ in 0..(trailing_backslashes * 2 + 1) {
-                    quoted.push('\\');
-                }
-                quoted.push('"');
-                trailing_backslashes = 0;
-            }
-            _ => {
-                for _ in 0..trailing_backslashes {
-                    quoted.push('\\');
-                }
-                quoted.push(ch);
-                trailing_backslashes = 0;
-            }
-        }
-    }
-
-    for _ in 0..(trailing_backslashes * 2) {
-        quoted.push('\\');
-    }
-    quoted.push('"');
-
-    quoted
-}
+use crate::win::{join_quoted_args, normalize_nonempty_str, os_str_contains_nul, shell_execute};
 
 fn join_args_for_shell_execute(args: &[OsString]) -> String {
-    args.iter()
-        .map(|a| quote_arg(a.as_os_str()))
-        .collect::<Vec<_>>()
-        .join(" ")
+    join_quoted_args(args)
 }
 
 fn validate_shell_args(args: &[OsString], message: &'static str) -> Result<()> {
-    if args
-        .iter()
-        .any(|arg| arg.as_os_str().encode_wide().any(|unit| unit == 0))
-    {
+    if args.iter().any(|arg| os_str_contains_nul(arg.as_os_str())) {
         return Err(Error::InvalidInput(message));
     }
 
@@ -87,7 +32,7 @@ fn validate_executable(executable: &OsStr) -> Result<()> {
         return Err(Error::InvalidInput("executable cannot be empty"));
     }
 
-    if executable.encode_wide().any(|unit| unit == 0) {
+    if os_str_contains_nul(executable) {
         return Err(Error::InvalidInput("executable cannot contain NUL bytes"));
     }
 
@@ -95,17 +40,11 @@ fn validate_executable(executable: &OsStr) -> Result<()> {
 }
 
 fn normalize_shell_verb(verb: &str) -> Result<&str> {
-    let trimmed = verb.trim();
-
-    if trimmed.is_empty() {
-        return Err(Error::InvalidInput("verb cannot be empty"));
-    }
-
-    if trimmed.contains('\0') {
-        return Err(Error::InvalidInput("verb cannot contain NUL bytes"));
-    }
-
-    Ok(trimmed)
+    normalize_nonempty_str(
+        verb,
+        "verb cannot be empty",
+        "verb cannot contain NUL bytes",
+    )
 }
 
 fn shell_execute_command(
@@ -114,38 +53,13 @@ fn shell_execute_command(
     args: &[OsString],
     context: &'static str,
 ) -> Result<()> {
-    let verb_w = to_wide_str(verb);
-    let executable_w = to_wide_os(executable);
     let joined_args = join_args_for_shell_execute(args);
-    let args_w = if joined_args.is_empty() {
+    let parameters = if joined_args.is_empty() {
         None
     } else {
-        Some(to_wide_str(&joined_args))
+        Some(joined_args.as_str())
     };
-    let args_ptr = args_w
-        .as_ref()
-        .map_or(PCWSTR::null(), |args| PCWSTR(args.as_ptr()));
-
-    let result = unsafe {
-        ShellExecuteW(
-            Some(HWND::default()),
-            PCWSTR(verb_w.as_ptr()),
-            PCWSTR(executable_w.as_ptr()),
-            args_ptr,
-            PCWSTR::null(),
-            SW_SHOWNORMAL,
-        )
-    };
-
-    let code = result.0 as isize;
-    if code <= 32 {
-        Err(Error::WindowsApi {
-            context,
-            code: code as i32,
-        })
-    } else {
-        Ok(())
-    }
+    shell_execute(verb, executable, parameters, context)
 }
 
 /// Returns `true` if the current process is running elevated.

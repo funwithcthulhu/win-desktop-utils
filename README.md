@@ -82,6 +82,19 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 }
 ```
 
+## Pick The Right Helper
+
+| Need | Start with | Feature | Notes |
+| --- | --- | --- | --- |
+| App identity, app-data paths, and one-instance startup | `DesktopApp` | `app` | Best first stop for normal apps |
+| Per-user config, cache, logs, or state folders | `ensure_local_app_data` / `ensure_roaming_app_data` | `paths` | Creates folders only when using `ensure_*` |
+| Current-session or global single-instance behavior | `single_instance` / `SingleInstanceOptions` | `instance` | Keep the guard alive |
+| Open files, URLs, folders, Properties, or print verbs | `open_with_default`, `open_url`, `open_with_verb` | `shell` | Uses user shell associations |
+| Show a file or folder in Explorer | `reveal_in_explorer` | `shell` | Starts `explorer.exe` |
+| Move files or folders to the Recycle Bin | `move_to_recycle_bin` / `move_paths_to_recycle_bin` | `recycle-bin` | Requires absolute existing paths |
+| Create `.lnk` or `.url` shortcuts | `create_shortcut` / `create_url_shortcut` | `shortcuts` | Output parent must already exist |
+| Check or request administrator elevation | `is_elevated`, `restart_as_admin`, `run_as_admin` | `elevation` | May show UAC and starts another process |
+
 ## Feature Flags
 
 - `app`: `DesktopApp` facade for app-data and single-instance startup.
@@ -138,11 +151,13 @@ The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blo
 Additional guides:
 
 - [`docs/adoption.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md): integration notes for common app shapes
+- [`docs/integrations.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md): framework and packaging integration sketches
 - [`docs/which-api.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md): pick the right helper for a task
 - [`docs/side-effects.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/side-effects.md): user-visible behavior and safety notes
 - [`docs/compatibility.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md): OS, Rust, feature, and non-Windows build policy
 - [`docs/design.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md): project scope and API acceptance rules
 - [`docs/testing.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md): test structure and expectations
+- [`docs/trust.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md): maintenance, compatibility, and release guarantees
 
 ## Examples
 
@@ -228,8 +243,11 @@ The crate includes:
 - doctest examples in the public modules
 - rustdoc lint checks for public documentation quality
 - `cargo xtask` automation for docs, feature, package, and release checks
+- `cargo xtask release-audit` checks for release metadata and package contents
+- ignored manual Windows smoke tests available through `cargo xtask smoke`
 - Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, doctests, docs, packaging, dependency policy, and semver checks
 - non-Windows CI checks that the public API stubs compile and return unsupported errors
+- scheduled CI to catch dependency, runner, and toolchain drift
 - documentation link checks for local Markdown links
 - docs published on docs.rs
 
@@ -254,5 +272,7 @@ The minimum supported Rust version is `1.82`, matching the current `windows` cra
 - Adoption notes: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md
 - Compatibility: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md
 - Design contract: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md
+- Integrations: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md
 - Testing guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md
+- Trust and maintenance: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md
 - Roadmap: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/ROADMAP.md

@@ -1,13 +1,11 @@
 //! Single-instance helpers backed by named Windows mutexes.
 
-use std::ffi::OsStr;
-use std::os::windows::ffi::OsStrExt;
-
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, GetLastError, ERROR_ALREADY_EXISTS, HANDLE};
 use windows::Win32::System::Threading::CreateMutexW;
 
 use crate::error::{Error, Result};
+use crate::win::to_wide_str;
 
 /// Scope used when creating the named mutex for single-instance enforcement.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -109,13 +107,6 @@ impl Drop for InstanceGuard {
             let _ = CloseHandle(self.handle);
         }
     }
-}
-
-fn to_wide_str(value: &str) -> Vec<u16> {
-    OsStr::new(value)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
 }
 
 fn validate_app_id(app_id: &str) -> Result<()> {

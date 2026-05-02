@@ -2,6 +2,15 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## Unreleased
+
+- Centralized shared private Windows helper code for COM apartments, shell execution, argument quoting, string normalization, and wide-string conversion.
+- Added ignored manual Windows desktop smoke tests and `cargo xtask smoke`.
+- Added `cargo xtask release-audit` for version metadata and package-content checks.
+- Added framework integration notes and trust/maintenance documentation.
+- Added a README helper decision matrix.
+- Added scheduled CI coverage for drift detection.
+
 ## 0.5.1 - 2026-05-02
 
 - Added a design contract that documents project scope, API acceptance rules, side-effect rules, and release expectations.

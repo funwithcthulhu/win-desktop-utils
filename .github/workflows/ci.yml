@@ -3,6 +3,9 @@ name: CI
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "17 11 * * 1"
+  workflow_dispatch:
 
 jobs:
   msrv:
@@ -56,6 +59,9 @@ jobs:
 
       - name: Check feature sets
         run: cargo xtask feature-check
+
+      - name: Audit release metadata
+        run: cargo xtask release-audit
 
       - name: Verify package
         run: cargo package

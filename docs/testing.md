@@ -44,8 +44,27 @@ Before release, run:
 cargo xtask release-check
 ```
 
+For manual Windows desktop smoke coverage, run:
+
+```powershell
+cargo xtask smoke
+```
+
+This runs ignored tests in `tests/smoke.rs` for contained desktop behavior such
+as shortcut creation, Recycle Bin moves, and elevation-state checks. Tests that
+open Explorer, open a browser, or trigger UAC require explicit opt-in:
+
+```powershell
+$env:WIN_DESKTOP_UTILS_SMOKE_UI='1'
+cargo xtask smoke
+
+$env:WIN_DESKTOP_UTILS_SMOKE_ELEVATION='1'
+cargo xtask smoke
+```
+
 ## CI Coverage
 
 Windows CI runs formatting, tests, clippy, examples, docs, packaging, dependency
-policy, and semver checks. Linux CI checks that the non-Windows stubs compile,
-test, and lint with all features.
+policy, semver checks, and release metadata audits. Linux CI checks that the
+non-Windows stubs compile, test, and lint with all features. Scheduled CI runs
+weekly to catch toolchain, runner, and dependency drift.

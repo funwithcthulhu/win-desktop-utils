@@ -22,18 +22,25 @@ Use this checklist before publishing a new `win-desktop-utils` release.
    cargo check --target x86_64-unknown-linux-gnu --no-default-features
    cargo deny check
    cargo semver-checks check-release
+   cargo xtask release-audit
    cargo xtask package-check
    ```
 
-3. Confirm the non-Windows CI job ran `cargo test --lib --all-features` on Linux.
-4. Confirm `main` is clean and synced with `origin/main`.
-5. Publish with `cargo publish`.
-6. Tag the exact published commit:
+3. Optionally run manual Windows desktop smoke tests:
+
+   ```powershell
+   cargo xtask smoke
+   ```
+
+4. Confirm the non-Windows CI job ran `cargo test --lib --all-features` on Linux.
+5. Confirm `main` is clean and synced with `origin/main`.
+6. Publish with `cargo publish`.
+7. Tag the exact published commit:
 
    ```powershell
    git tag -a vX.Y.Z -m "Release vX.Y.Z"
    git push origin vX.Y.Z
    ```
 
-7. Create a GitHub release for the tag with a short change summary and verification list.
-8. Confirm crates.io, docs.rs, the GitHub release, and GitHub Actions all reflect the new version.
+8. Create a GitHub release for the tag with a short change summary and verification list.
+9. Confirm crates.io, docs.rs, the GitHub release, and GitHub Actions all reflect the new version.

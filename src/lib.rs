@@ -200,6 +200,17 @@ pub mod shortcuts;
     )
 ))]
 mod unsupported;
+#[cfg(all(
+    windows,
+    any(
+        feature = "elevation",
+        feature = "instance",
+        feature = "recycle-bin",
+        feature = "shell",
+        feature = "shortcuts",
+    )
+))]
+mod win;
 
 pub use error::{Error, Result};
 

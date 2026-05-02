@@ -1,18 +1,17 @@
 //! Shortcut helpers for Windows `.lnk` and `.url` files.
 
-use std::ffi::{OsStr, OsString};
-use std::os::windows::ffi::OsStrExt;
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-use std::thread;
 
 use windows::core::{Interface, PCWSTR};
-use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoUninitialize, IPersistFile, CLSCTX_INPROC_SERVER,
-    COINIT_APARTMENTTHREADED,
-};
+use windows::Win32::System::Com::{CoCreateInstance, IPersistFile, CLSCTX_INPROC_SERVER};
 use windows::Win32::UI::Shell::{IShellLinkW, ShellLink};
 
 use crate::error::{Error, Result};
+use crate::win::{
+    join_quoted_args, os_str_contains_nul, path_contains_nul, run_in_sta, to_wide_os, to_wide_str,
+    ComApartment,
+};
 
 /// Icon configuration for a Windows shortcut.
 ///
@@ -118,90 +117,8 @@ struct ShortcutRequest {
     options: ShortcutOptions,
 }
 
-struct ComApartment;
-
-impl ComApartment {
-    fn initialize_sta() -> Result<Self> {
-        let result = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
-
-        if result.is_ok() {
-            Ok(Self)
-        } else {
-            Err(Error::WindowsApi {
-                context: "CoInitializeEx",
-                code: result.0,
-            })
-        }
-    }
-}
-
-impl Drop for ComApartment {
-    fn drop(&mut self) {
-        unsafe {
-            CoUninitialize();
-        }
-    }
-}
-
-fn to_wide_os(value: &OsStr) -> Vec<u16> {
-    value.encode_wide().chain(std::iter::once(0)).collect()
-}
-
-fn to_wide_str(value: &str) -> Vec<u16> {
-    OsStr::new(value)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
-
-fn quote_arg(arg: &OsStr) -> String {
-    let text = arg.to_string_lossy();
-    let mut quoted = String::with_capacity(text.len() + 2);
-    let mut trailing_backslashes = 0usize;
-
-    quoted.push('"');
-
-    for ch in text.chars() {
-        match ch {
-            '\\' => trailing_backslashes += 1,
-            '"' => {
-                for _ in 0..(trailing_backslashes * 2 + 1) {
-                    quoted.push('\\');
-                }
-                quoted.push('"');
-                trailing_backslashes = 0;
-            }
-            _ => {
-                for _ in 0..trailing_backslashes {
-                    quoted.push('\\');
-                }
-                quoted.push(ch);
-                trailing_backslashes = 0;
-            }
-        }
-    }
-
-    for _ in 0..(trailing_backslashes * 2) {
-        quoted.push('\\');
-    }
-    quoted.push('"');
-
-    quoted
-}
-
 fn join_args_for_shortcut(args: &[OsString]) -> String {
-    args.iter()
-        .map(|arg| quote_arg(arg.as_os_str()))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn os_str_contains_nul(value: &OsStr) -> bool {
-    value.encode_wide().any(|unit| unit == 0)
-}
-
-fn path_contains_nul(path: &Path) -> bool {
-    os_str_contains_nul(path.as_os_str())
+    join_quoted_args(args)
 }
 
 fn has_extension(path: &Path, expected: &str) -> bool {
@@ -332,7 +249,7 @@ fn validate_url(url: &str) -> Result<&str> {
 }
 
 fn create_shortcut_in_sta(request: ShortcutRequest) -> Result<()> {
-    let _com = ComApartment::initialize_sta()?;
+    let _com = ComApartment::initialize_sta("CoInitializeEx")?;
     let link: IShellLinkW = unsafe { CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER) }
         .map_err(|err| Error::WindowsApi {
             context: "CoCreateInstance(ShellLink)",
@@ -403,10 +320,7 @@ where
     T: Send + 'static,
     F: FnOnce() -> Result<T> + Send + 'static,
 {
-    match thread::spawn(work).join() {
-        Ok(result) => result,
-        Err(_) => Err(Error::Unsupported("shortcut STA worker thread panicked")),
-    }
+    run_in_sta("shortcut STA worker thread panicked", work)
 }
 
 /// Creates or overwrites a Windows `.lnk` shortcut.

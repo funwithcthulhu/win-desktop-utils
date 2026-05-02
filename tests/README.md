@@ -9,6 +9,8 @@ beside implementation code in `src/`.
   checks for shell, shortcut, Recycle Bin, elevation, and single-instance helpers.
 - `basic.rs`: app-data path integration checks.
 - `error_display.rs`: public error display and source behavior.
+- `smoke.rs`: ignored manual Windows desktop smoke tests for contained
+  side-effect checks.
 
 Non-Windows stub tests live in `src/unsupported.rs` because that module is only
 compiled on non-Windows targets.

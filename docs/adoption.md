@@ -3,6 +3,8 @@
 These examples show where `win-desktop-utils` usually fits in real application
 shapes. They are intentionally integration notes, not new feature proposals.
 
+For framework-specific startup sketches, see [`integrations.md`](integrations.md).
+
 ## Cross-Platform Application Layout
 
 Keep Windows desktop behavior in a Windows-only module when the rest of the app

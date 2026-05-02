@@ -1,25 +1,17 @@
 //! Shell-facing helpers for opening files, URLs, Explorer selections, and the Recycle Bin.
 
+#[cfg(feature = "shell")]
 use std::ffi::OsStr;
-use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
 #[cfg(feature = "recycle-bin")]
 use std::path::PathBuf;
 #[cfg(feature = "shell")]
 use std::process::Command;
-#[cfg(feature = "recycle-bin")]
-use std::thread;
 
-use windows::core::PCWSTR;
-#[cfg(feature = "shell")]
-use windows::Win32::Foundation::HWND;
 #[cfg(feature = "recycle-bin")]
-use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
-    COINIT_APARTMENTTHREADED,
-};
-#[cfg(feature = "shell")]
-use windows::Win32::UI::Shell::ShellExecuteW;
+use windows::core::PCWSTR;
+#[cfg(feature = "recycle-bin")]
+use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_INPROC_SERVER};
 #[cfg(feature = "recycle-bin")]
 use windows::Win32::UI::Shell::{
     FileOperation, IFileOperation, IFileOperationProgressSink, IShellItem,
@@ -27,106 +19,30 @@ use windows::Win32::UI::Shell::{
     FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, SHERB_NOCONFIRMATION, SHERB_NOPROGRESSUI,
     SHERB_NOSOUND,
 };
-#[cfg(feature = "shell")]
-use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
 use crate::error::{Error, Result};
-
-fn to_wide_os(value: &OsStr) -> Vec<u16> {
-    value.encode_wide().chain(std::iter::once(0)).collect()
-}
-
 #[cfg(feature = "shell")]
-fn to_wide_str(value: &str) -> Vec<u16> {
-    OsStr::new(value)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
+use crate::win::{normalize_nonempty_str, shell_execute};
+#[cfg(feature = "recycle-bin")]
+use crate::win::{run_in_sta, to_wide_os, ComApartment};
 
 #[cfg(feature = "shell")]
 fn normalize_url(url: &str) -> Result<&str> {
-    let trimmed = url.trim();
-
-    if trimmed.is_empty() {
-        return Err(Error::InvalidInput("url cannot be empty"));
-    }
-
-    if trimmed.contains('\0') {
-        return Err(Error::InvalidInput("url cannot contain NUL bytes"));
-    }
-
-    Ok(trimmed)
+    normalize_nonempty_str(url, "url cannot be empty", "url cannot contain NUL bytes")
 }
 
 #[cfg(feature = "shell")]
 fn normalize_shell_verb(verb: &str) -> Result<&str> {
-    let trimmed = verb.trim();
-
-    if trimmed.is_empty() {
-        return Err(Error::InvalidInput("verb cannot be empty"));
-    }
-
-    if trimmed.contains('\0') {
-        return Err(Error::InvalidInput("verb cannot contain NUL bytes"));
-    }
-
-    Ok(trimmed)
-}
-
-#[cfg(feature = "recycle-bin")]
-struct ComApartment;
-
-#[cfg(feature = "recycle-bin")]
-impl ComApartment {
-    fn initialize_sta() -> Result<Self> {
-        let result = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
-
-        if result.is_ok() {
-            Ok(Self)
-        } else {
-            Err(Error::WindowsApi {
-                context: "CoInitializeEx",
-                code: result.0,
-            })
-        }
-    }
-}
-
-#[cfg(feature = "recycle-bin")]
-impl Drop for ComApartment {
-    fn drop(&mut self) {
-        unsafe {
-            CoUninitialize();
-        }
-    }
+    normalize_nonempty_str(
+        verb,
+        "verb cannot be empty",
+        "verb cannot contain NUL bytes",
+    )
 }
 
 #[cfg(feature = "shell")]
 fn shell_execute_raw(verb: &str, target: &OsStr) -> Result<()> {
-    let operation = to_wide_str(verb);
-    let target_w = to_wide_os(target);
-
-    let result = unsafe {
-        ShellExecuteW(
-            Some(HWND::default()),
-            PCWSTR(operation.as_ptr()),
-            PCWSTR(target_w.as_ptr()),
-            PCWSTR::null(),
-            PCWSTR::null(),
-            SW_SHOWNORMAL,
-        )
-    };
-
-    let code = result.0 as isize;
-    if code <= 32 {
-        Err(Error::WindowsApi {
-            context: "ShellExecuteW",
-            code: code as i32,
-        })
-    } else {
-        Ok(())
-    }
+    shell_execute(verb, target, None, "ShellExecuteW")
 }
 
 #[cfg(feature = "recycle-bin")]
@@ -193,7 +109,7 @@ fn queue_recycle_item(operation: &IFileOperation, path: &Path) -> Result<()> {
 
 #[cfg(feature = "recycle-bin")]
 fn recycle_paths_in_sta(paths: &[PathBuf]) -> Result<()> {
-    let _com = ComApartment::initialize_sta()?;
+    let _com = ComApartment::initialize_sta("CoInitializeEx")?;
     let operation: IFileOperation = unsafe {
         CoCreateInstance(&FileOperation, None, CLSCTX_INPROC_SERVER)
     }
@@ -255,10 +171,7 @@ where
     T: Send + 'static,
     F: FnOnce() -> Result<T> + Send + 'static,
 {
-    match thread::spawn(work).join() {
-        Ok(result) => result,
-        Err(_) => Err(Error::Unsupported("shell STA worker thread panicked")),
-    }
+    run_in_sta("shell STA worker thread panicked", work)
 }
 
 /// Opens a file or directory with the user's default Windows handler.

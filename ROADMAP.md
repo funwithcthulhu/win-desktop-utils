@@ -9,6 +9,7 @@ clear behavior, validation, examples, and docs.
 - Keep examples copy-pasteable for normal Windows desktop apps.
 - Preserve a low dependency surface through feature flags.
 - Keep MSRV and public API compatibility checked in CI.
+- Keep release metadata, package contents, and manual smoke coverage easy to audit.
 - Make cross-platform consumers able to type-check the public API, while keeping
   Windows behavior explicit.
 

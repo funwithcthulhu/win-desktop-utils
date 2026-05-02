@@ -24,6 +24,7 @@ Run these before opening a PR:
 ```powershell
 cargo xtask docs-check
 cargo xtask feature-check
+cargo xtask release-audit
 cargo fmt --all -- --check
 cargo test
 cargo clippy --all-targets --all-features -- -D warnings
@@ -37,6 +38,16 @@ Before release, run the full local gate:
 ```powershell
 cargo xtask release-check
 ```
+
+For manual Windows desktop behavior, run:
+
+```powershell
+cargo xtask smoke
+```
+
+The smoke command is intentionally ignored by default test runs because some
+checks can touch the desktop shell. See [`docs/testing.md`](docs/testing.md) for
+UI and elevation opt-in variables.
 
 If you change cross-platform behavior, also run:
 
