@@ -93,7 +93,7 @@ Notable error distinctions include:
 - `open_with_default` requires a non-empty existing path.
 - `open_url` trims surrounding whitespace before delegating to the Windows shell.
 - `reveal_in_explorer` requires an existing path and launches `explorer.exe`.
-- `move_to_recycle_bin` requires an absolute existing path and uses `SHFileOperationW` with undo enabled.
+- `move_to_recycle_bin` requires an absolute existing path and uses `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
 - `roaming_app_data` and `local_app_data` resolve the base directory via `SHGetKnownFolderPath`.
 - `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
 - `single_instance` rejects backslashes in `app_id` because Windows reserves them for kernel-object namespaces such as `Local\` and `Global\`.

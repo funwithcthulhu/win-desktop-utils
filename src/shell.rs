@@ -2,21 +2,24 @@
 
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::thread;
 
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::Shell::{SHFileOperationW, ShellExecuteW, SHFILEOPSTRUCTW};
+use windows::Win32::System::Com::{
+    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
+    COINIT_APARTMENTTHREADED,
+};
+use windows::Win32::UI::Shell::{
+    FileOperation, IFileOperation, IFileOperationProgressSink, IShellItem,
+    SHCreateItemFromParsingName, ShellExecuteW, FOFX_RECYCLEONDELETE, FOF_ALLOWUNDO,
+    FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT,
+};
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
 use crate::error::{Error, Result};
-
-const FO_DELETE_CODE: u32 = 3;
-const FOF_SILENT: u16 = 0x0004;
-const FOF_NOCONFIRMATION: u16 = 0x0010;
-const FOF_ALLOWUNDO: u16 = 0x0040;
-const FOF_NOERRORUI: u16 = 0x0400;
 
 fn to_wide_os(value: &OsStr) -> Vec<u16> {
     value.encode_wide().chain(std::iter::once(0)).collect()
@@ -25,15 +28,6 @@ fn to_wide_os(value: &OsStr) -> Vec<u16> {
 fn to_wide_str(value: &str) -> Vec<u16> {
     OsStr::new(value)
         .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
-
-fn to_double_null_path(value: &Path) -> Vec<u16> {
-    value
-        .as_os_str()
-        .encode_wide()
-        .chain(std::iter::once(0))
         .chain(std::iter::once(0))
         .collect()
 }
@@ -50,6 +44,31 @@ fn normalize_url(url: &str) -> Result<&str> {
     }
 
     Ok(trimmed)
+}
+
+struct ComApartment;
+
+impl ComApartment {
+    fn initialize_sta() -> Result<Self> {
+        let result = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
+
+        if result.is_ok() {
+            Ok(Self)
+        } else {
+            Err(Error::WindowsApi {
+                context: "CoInitializeEx",
+                code: result.0,
+            })
+        }
+    }
+}
+
+impl Drop for ComApartment {
+    fn drop(&mut self) {
+        unsafe {
+            CoUninitialize();
+        }
+    }
 }
 
 fn shell_open_raw(target: &OsStr) -> Result<()> {
@@ -75,6 +94,76 @@ fn shell_open_raw(target: &OsStr) -> Result<()> {
         })
     } else {
         Ok(())
+    }
+}
+
+fn shell_item_from_path(path: &Path) -> Result<IShellItem> {
+    let path_w = to_wide_os(path.as_os_str());
+
+    unsafe { SHCreateItemFromParsingName(PCWSTR(path_w.as_ptr()), None) }.map_err(|err| {
+        Error::WindowsApi {
+            context: "SHCreateItemFromParsingName",
+            code: err.code().0,
+        }
+    })
+}
+
+fn recycle_path_in_sta(path: &Path) -> Result<()> {
+    let _com = ComApartment::initialize_sta()?;
+    let operation: IFileOperation = unsafe {
+        CoCreateInstance(&FileOperation, None, CLSCTX_INPROC_SERVER)
+    }
+    .map_err(|err| Error::WindowsApi {
+        context: "CoCreateInstance(FileOperation)",
+        code: err.code().0,
+    })?;
+
+    let flags =
+        FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT | FOFX_RECYCLEONDELETE;
+
+    unsafe { operation.SetOperationFlags(flags) }.map_err(|err| Error::WindowsApi {
+        context: "IFileOperation::SetOperationFlags",
+        code: err.code().0,
+    })?;
+
+    let item = shell_item_from_path(path)?;
+
+    unsafe { operation.DeleteItem(&item, Option::<&IFileOperationProgressSink>::None) }.map_err(
+        |err| Error::WindowsApi {
+            context: "IFileOperation::DeleteItem",
+            code: err.code().0,
+        },
+    )?;
+
+    unsafe { operation.PerformOperations() }.map_err(|err| Error::WindowsApi {
+        context: "IFileOperation::PerformOperations",
+        code: err.code().0,
+    })?;
+
+    let aborted =
+        unsafe { operation.GetAnyOperationsAborted() }.map_err(|err| Error::WindowsApi {
+            context: "IFileOperation::GetAnyOperationsAborted",
+            code: err.code().0,
+        })?;
+
+    if aborted.as_bool() {
+        Err(Error::WindowsApi {
+            context: "IFileOperation::PerformOperations aborted",
+            code: 0,
+        })
+    } else {
+        Ok(())
+    }
+}
+
+fn run_in_shell_sta<T, F>(work: F) -> Result<T>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T> + Send + 'static,
+{
+    match thread::spawn(work).join() {
+        Ok(result) => result,
+        Err(_) => Err(Error::Unsupported("shell STA worker thread panicked")),
     }
 }
 
@@ -166,7 +255,8 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// The path must be absolute and must exist.
 ///
-/// This function uses `SHFileOperationW` with `FO_DELETE` and `FOF_ALLOWUNDO`.
+/// This function uses `IFileOperation` on a dedicated STA thread so it can request
+/// recycle-bin behavior through the modern Shell API.
 ///
 /// # Errors
 ///
@@ -198,34 +288,8 @@ pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
         return Err(Error::PathDoesNotExist);
     }
 
-    let from_w = to_double_null_path(path);
-
-    let mut op = SHFILEOPSTRUCTW {
-        hwnd: HWND::default(),
-        wFunc: FO_DELETE_CODE,
-        pFrom: PCWSTR(from_w.as_ptr()),
-        pTo: PCWSTR::null(),
-        fFlags: FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
-        fAnyOperationsAborted: false.into(),
-        hNameMappings: std::ptr::null_mut(),
-        lpszProgressTitle: PCWSTR::null(),
-    };
-
-    let result = unsafe { SHFileOperationW(&mut op) };
-
-    if result != 0 {
-        Err(Error::WindowsApi {
-            context: "SHFileOperationW(FO_DELETE)",
-            code: result,
-        })
-    } else if op.fAnyOperationsAborted.as_bool() {
-        Err(Error::WindowsApi {
-            context: "SHFileOperationW(FO_DELETE) aborted",
-            code: 0,
-        })
-    } else {
-        Ok(())
-    }
+    let path = PathBuf::from(path);
+    run_in_shell_sta(move || recycle_path_in_sta(&path))
 }
 
 #[cfg(test)]
