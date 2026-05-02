@@ -6,27 +6,23 @@ Use this checklist before publishing a new `win-desktop-utils` release.
 2. Run the local verification suite:
 
    ```powershell
+   cargo xtask release-check
+   ```
+
+   The command runs the release gates below:
+
+   ```powershell
    cargo fmt --all -- --check
    cargo test
    cargo clippy --all-targets --all-features -- -D warnings
    cargo check --examples
-   cargo test --doc --all-features
-   cargo check --no-default-features
-   cargo check --no-default-features --features app
-   cargo check --no-default-features --features elevation
-   cargo check --no-default-features --features instance
-   cargo check --no-default-features --features paths
-   cargo check --no-default-features --features recycle-bin
-   cargo check --no-default-features --features shell
-   cargo check --no-default-features --features shortcuts
+   cargo xtask docs-check
+   cargo xtask feature-check
    cargo check --target x86_64-unknown-linux-gnu --all-targets --all-features
    cargo check --target x86_64-unknown-linux-gnu --no-default-features
-   cargo doc --no-deps
-   lychee --offline --no-progress README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md RELEASE.md ROADMAP.md CODE_OF_CONDUCT.md docs/cookbook.md docs/which-api.md docs/side-effects.md docs/compatibility.md
    cargo deny check
    cargo semver-checks check-release
-   cargo package
-   cargo publish --dry-run
+   cargo xtask package-check
    ```
 
 3. Confirm the non-Windows CI job ran `cargo test --lib --all-features` on Linux.

@@ -2,6 +2,15 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## Unreleased
+
+- Added a design contract that documents project scope, API acceptance rules, side-effect rules, and release expectations.
+- Added adoption notes for common app shapes without expanding the public API.
+- Added a testing guide and test layout documentation.
+- Added `cargo xtask` automation for docs, feature, package, and release checks.
+- Enabled rustdoc documentation lints in the crate and CI.
+- Expanded contribution guidance with explicit criteria for new APIs.
+
 ## 0.5.0 - 2026-05-02
 
 - Removed the hard non-Windows compile error and added non-Windows public API stubs that return `Error::Unsupported` for Windows operations.

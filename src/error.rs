@@ -1,6 +1,13 @@
 //! Shared error and result types for the crate.
 
 /// Error type for `win-desktop-utils`.
+///
+/// # Examples
+///
+/// ```
+/// let err = win_desktop_utils::Error::InvalidInput("path cannot be empty");
+/// assert_eq!(err.to_string(), "invalid input: path cannot be empty");
+/// ```
 #[derive(Debug)]
 pub enum Error {
     /// The requested operation is not implemented on the current platform or in the current crate version.
@@ -23,6 +30,19 @@ pub enum Error {
 }
 
 /// Convenient result alias for this crate.
+///
+/// # Examples
+///
+/// ```
+/// fn needs_windows() -> win_desktop_utils::Result<()> {
+///     Err(win_desktop_utils::Error::Unsupported("example"))
+/// }
+///
+/// assert!(matches!(
+///     needs_windows(),
+///     Err(win_desktop_utils::Error::Unsupported("example")),
+/// ));
+/// ```
 pub type Result<T> = std::result::Result<T, Error>;
 
 impl std::fmt::Display for Error {

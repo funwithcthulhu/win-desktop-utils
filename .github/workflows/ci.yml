@@ -36,6 +36,9 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
+      - name: Check xtask
+        run: cargo check -p xtask
+
       - name: Check formatting
         run: cargo fmt --all -- --check
 
@@ -48,30 +51,11 @@ jobs:
       - name: Check examples
         run: cargo check --examples
 
-      - name: Test documentation examples
-        run: cargo test --doc --all-features
+      - name: Check documentation
+        run: cargo xtask docs-check
 
       - name: Check feature sets
-        run: |
-          cargo check --no-default-features
-          cargo check --no-default-features --features app
-          cargo check --no-default-features --features elevation
-          cargo check --no-default-features --features instance
-          cargo check --no-default-features --features paths
-          cargo check --no-default-features --features recycle-bin
-          cargo check --no-default-features --features shell
-          cargo check --no-default-features --features shortcuts
-
-      - name: Build docs
-        run: cargo doc --no-deps
-
-      - name: Install lychee
-        uses: taiki-e/install-action@v2
-        with:
-          tool: lychee
-
-      - name: Check documentation links
-        run: lychee --offline --no-progress README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md RELEASE.md ROADMAP.md CODE_OF_CONDUCT.md docs/cookbook.md docs/which-api.md docs/side-effects.md docs/compatibility.md
+        run: cargo xtask feature-check
 
       - name: Verify package
         run: cargo package

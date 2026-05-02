@@ -11,6 +11,12 @@ homepage = "https://github.com/funwithcthulhu/win-desktop-utils"
 documentation = "https://docs.rs/win-desktop-utils"
 keywords = ["windows", "desktop", "shortcut", "explorer", "win32"]
 categories = ["os::windows-apis", "api-bindings"]
+exclude = [".cargo/**", "xtask/**"]
+
+[workspace]
+members = [".", "xtask"]
+default-members = ["."]
+resolver = "2"
 
 [features]
 default = [

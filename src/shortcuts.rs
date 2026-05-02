@@ -15,6 +15,15 @@ use windows::Win32::UI::Shell::{IShellLinkW, ShellLink};
 use crate::error::{Error, Result};
 
 /// Icon configuration for a Windows shortcut.
+///
+/// # Examples
+///
+/// ```
+/// let icon = win_desktop_utils::ShortcutIcon::new(r"C:\Windows\notepad.exe", 0);
+///
+/// assert_eq!(icon.index, 0);
+/// assert!(icon.path.ends_with("notepad.exe"));
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ShortcutIcon {
     /// Path to an icon resource, executable, or DLL.
@@ -34,6 +43,21 @@ impl ShortcutIcon {
 }
 
 /// Options used when creating a Windows `.lnk` shortcut.
+///
+/// # Examples
+///
+/// ```
+/// let options = win_desktop_utils::ShortcutOptions::new()
+///     .argument("--safe-mode")
+///     .working_directory(r"C:\Windows")
+///     .icon(r"C:\Windows\notepad.exe", 0)
+///     .description("Open a tool");
+///
+/// assert_eq!(options.arguments.len(), 1);
+/// assert!(options.working_directory.is_some());
+/// assert!(options.icon.is_some());
+/// assert_eq!(options.description.as_deref(), Some("Open a tool"));
+/// ```
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ShortcutOptions {
     /// Command-line arguments stored in the shortcut.

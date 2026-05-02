@@ -170,6 +170,10 @@
 //! in CI with `cargo-semver-checks`, and dependency policy is checked with
 //! `cargo-deny`.
 
+#![warn(missing_docs)]
+#![warn(rustdoc::bare_urls)]
+#![warn(rustdoc::broken_intra_doc_links)]
+
 #[cfg(all(windows, feature = "app"))]
 pub mod app;
 #[cfg(all(windows, feature = "elevation"))]

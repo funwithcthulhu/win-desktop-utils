@@ -22,15 +22,20 @@ Please avoid broad framework features or unrelated Windows APIs unless there is 
 Run these before opening a PR:
 
 ```powershell
+cargo xtask docs-check
+cargo xtask feature-check
 cargo fmt --all -- --check
 cargo test
 cargo clippy --all-targets --all-features -- -D warnings
 cargo check --examples
-cargo test --doc --all-features
-cargo doc --no-deps
-lychee --offline --no-progress README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md RELEASE.md ROADMAP.md CODE_OF_CONDUCT.md docs/cookbook.md docs/which-api.md docs/side-effects.md docs/compatibility.md
 cargo package
 cargo deny check
+```
+
+Before release, run the full local gate:
+
+```powershell
+cargo xtask release-check
 ```
 
 If you change cross-platform behavior, also run:
@@ -48,6 +53,24 @@ If you change public API, also run:
 ```powershell
 cargo semver-checks check-release
 ```
+
+## New API Criteria
+
+Before proposing a new public API, check it against [`docs/design.md`](docs/design.md).
+
+A new API should have:
+
+- a common interactive Windows desktop workflow behind it
+- a clear feature flag home
+- explicit input validation before side effects start
+- rustdoc explaining purpose, errors, and side effects
+- Markdown docs when the behavior has user-visible consequences
+- focused tests, including validation failures
+- non-Windows stub behavior returning `Error::Unsupported`
+- an example when users are likely to copy the workflow
+
+APIs that only expose another Win32 call without a common workflow are usually
+outside this crate's scope.
 
 ## MSRV
 

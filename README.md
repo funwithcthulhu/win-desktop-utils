@@ -137,9 +137,12 @@ The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blo
 
 Additional guides:
 
+- [`docs/adoption.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md): integration notes for common app shapes
 - [`docs/which-api.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md): pick the right helper for a task
 - [`docs/side-effects.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/side-effects.md): user-visible behavior and safety notes
 - [`docs/compatibility.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md): OS, Rust, feature, and non-Windows build policy
+- [`docs/design.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md): project scope and API acceptance rules
+- [`docs/testing.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md): test structure and expectations
 
 ## Examples
 
@@ -223,6 +226,8 @@ The crate includes:
 - automated tests for validation and single-instance behavior
 - unit tests covering argument quoting and input normalization edge cases
 - doctest examples in the public modules
+- rustdoc lint checks for public documentation quality
+- `cargo xtask` automation for docs, feature, package, and release checks
 - Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, doctests, docs, packaging, dependency policy, and semver checks
 - non-Windows CI checks that the public API stubs compile and return unsupported errors
 - documentation link checks for local Markdown links
@@ -246,5 +251,8 @@ The minimum supported Rust version is `1.82`, matching the current `windows` cra
 - Changelog: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/CHANGELOG.md
 - Cookbook: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md
 - API guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md
+- Adoption notes: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md
 - Compatibility: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md
+- Design contract: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md
+- Testing guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md
 - Roadmap: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/ROADMAP.md
