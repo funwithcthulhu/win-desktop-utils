@@ -2,7 +2,8 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use win_desktop_utils::{
-    move_to_recycle_bin, open_url, open_with_default, reveal_in_explorer, single_instance, Error,
+    move_to_recycle_bin, open_url, open_with_default, reveal_in_explorer, single_instance,
+    single_instance_with_scope, Error, InstanceScope,
 };
 
 #[test]
@@ -84,6 +85,44 @@ fn single_instance_rejects_backslashes_in_app_id() {
 fn single_instance_rejects_nul_bytes_in_app_id() {
     let result = single_instance("demo\0app");
     assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn single_instance_with_scope_allows_global_scope() {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let app_id = format!(
+        "win-desktop-utils-test-global-{}-{}",
+        std::process::id(),
+        unique
+    );
+
+    let first = single_instance_with_scope(&app_id, InstanceScope::Global).unwrap();
+    assert!(first.is_some());
+
+    let second = single_instance_with_scope(&app_id, InstanceScope::Global).unwrap();
+    assert!(second.is_none());
+}
+
+#[test]
+fn single_instance_scopes_do_not_conflict_with_each_other() {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let app_id = format!(
+        "win-desktop-utils-test-scope-separation-{}-{}",
+        std::process::id(),
+        unique
+    );
+
+    let local = single_instance_with_scope(&app_id, InstanceScope::CurrentSession).unwrap();
+    assert!(local.is_some());
+
+    let global = single_instance_with_scope(&app_id, InstanceScope::Global).unwrap();
+    assert!(global.is_some());
 }
 
 #[test]

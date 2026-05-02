@@ -9,6 +9,25 @@ use windows::Win32::System::Threading::CreateMutexW;
 
 use crate::error::{Error, Result};
 
+/// Scope used when creating the named mutex for single-instance enforcement.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum InstanceScope {
+    /// Use the current Windows session namespace (`Local\...`).
+    CurrentSession,
+    /// Use the global Windows namespace (`Global\...`) so instances across
+    /// all sessions contend for the same named mutex.
+    Global,
+}
+
+impl InstanceScope {
+    fn namespace_prefix(self) -> &'static str {
+        match self {
+            Self::CurrentSession => "Local",
+            Self::Global => "Global",
+        }
+    }
+}
+
 /// Guard that keeps the named single-instance mutex alive for the current process.
 ///
 /// Dropping this value releases the underlying mutex handle.
@@ -49,10 +68,17 @@ fn validate_app_id(app_id: &str) -> Result<()> {
     Ok(())
 }
 
+fn mutex_name(app_id: &str, scope: InstanceScope) -> String {
+    format!("{}\\win_desktop_utils_{app_id}", scope.namespace_prefix())
+}
+
 /// Attempts to acquire a named process-wide single-instance guard.
 ///
 /// Returns `Ok(Some(InstanceGuard))` for the first instance and `Ok(None)` if another
 /// instance with the same `app_id` is already running.
+///
+/// This is a convenience wrapper around [`single_instance_with_scope`] using
+/// [`InstanceScope::CurrentSession`].
 ///
 /// The mutex name is derived from `app_id` using a `Local\...` namespace, so the
 /// single-instance behavior is scoped to the current Windows session.
@@ -77,9 +103,45 @@ fn validate_app_id(app_id: &str) -> Result<()> {
 /// ```
 #[must_use = "store the returned guard for as long as the process should be considered the active instance"]
 pub fn single_instance(app_id: &str) -> Result<Option<InstanceGuard>> {
+    single_instance_with_scope(app_id, InstanceScope::CurrentSession)
+}
+
+/// Attempts to acquire a named single-instance guard in the requested Windows namespace.
+///
+/// Returns `Ok(Some(InstanceGuard))` for the first instance in the selected scope and
+/// `Ok(None)` if another instance with the same `app_id` is already running in that scope.
+///
+/// Use [`InstanceScope::CurrentSession`] to enforce a single instance per logged-in session,
+/// or [`InstanceScope::Global`] to enforce a single instance across sessions.
+///
+/// Keep the returned guard alive for as long as the current process should continue
+/// to own the single-instance lock.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `app_id` is empty, contains only whitespace,
+/// contains NUL bytes, or contains backslashes.
+/// Returns [`Error::WindowsApi`] if `CreateMutexW` fails.
+///
+/// # Examples
+///
+/// ```
+/// let app_id = format!("demo-app-global-{}", std::process::id());
+/// let guard = win_desktop_utils::single_instance_with_scope(
+///     &app_id,
+///     win_desktop_utils::InstanceScope::Global,
+/// )?;
+/// assert!(guard.is_some());
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+#[must_use = "store the returned guard for as long as the process should be considered the active instance"]
+pub fn single_instance_with_scope(
+    app_id: &str,
+    scope: InstanceScope,
+) -> Result<Option<InstanceGuard>> {
     validate_app_id(app_id)?;
 
-    let mutex_name = format!("Local\\win_desktop_utils_{app_id}");
+    let mutex_name = mutex_name(app_id, scope);
     let mutex_name_w = to_wide_str(&mutex_name);
 
     let handle =
@@ -104,7 +166,7 @@ pub fn single_instance(app_id: &str) -> Result<Option<InstanceGuard>> {
 
 #[cfg(test)]
 mod tests {
-    use super::validate_app_id;
+    use super::{mutex_name, validate_app_id, InstanceScope};
 
     #[test]
     fn validate_app_id_rejects_empty_string() {
@@ -135,5 +197,21 @@ mod tests {
                 "app_id cannot contain NUL bytes"
             ))
         ));
+    }
+
+    #[test]
+    fn mutex_name_uses_local_namespace_for_current_session_scope() {
+        assert_eq!(
+            mutex_name("demo-app", InstanceScope::CurrentSession),
+            "Local\\win_desktop_utils_demo-app"
+        );
+    }
+
+    #[test]
+    fn mutex_name_uses_global_namespace_for_global_scope() {
+        assert_eq!(
+            mutex_name("demo-app", InstanceScope::Global),
+            "Global\\win_desktop_utils_demo-app"
+        );
     }
 }

@@ -53,12 +53,14 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 - `reveal_in_explorer(path)`
 - `move_to_recycle_bin(path)`
 - `single_instance(app_id)`
+- `single_instance_with_scope(app_id, scope)`
 - `roaming_app_data(app_name)`
 - `local_app_data(app_name)`
 - `ensure_roaming_app_data(app_name)`
 - `ensure_local_app_data(app_name)`
 - `is_elevated()`
 - `restart_as_admin(args)`
+- `InstanceScope::{CurrentSession, Global}`
 
 ## Examples
 
@@ -69,6 +71,7 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 - Recycle Bin integration
 - elevation checks and relaunch
 - single-instance enforcement
+- single-instance enforcement across all sessions
 
 Run any example with:
 
@@ -96,6 +99,7 @@ Notable error distinctions include:
 - `move_to_recycle_bin` requires an absolute existing path and uses `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
 - `roaming_app_data` and `local_app_data` resolve the base directory via `SHGetKnownFolderPath`.
 - `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
+- `single_instance_with_scope` can opt into either the current-session (`Local\...`) or global (`Global\...`) namespace.
 - `single_instance` rejects backslashes in `app_id` because Windows reserves them for kernel-object namespaces such as `Local\` and `Global\`.
 - Keep the returned `InstanceGuard` alive for as long as the process should own the single-instance lock.
 - `restart_as_admin` starts a new elevated instance of the current executable and does not terminate the current process.

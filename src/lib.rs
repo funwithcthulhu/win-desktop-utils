@@ -28,12 +28,14 @@
 //! - [`reveal_in_explorer`]
 //! - [`move_to_recycle_bin`]
 //! - [`single_instance`]
+//! - [`single_instance_with_scope`]
 //! - [`roaming_app_data`]
 //! - [`local_app_data`]
 //! - [`ensure_roaming_app_data`]
 //! - [`ensure_local_app_data`]
 //! - [`is_elevated`]
 //! - [`restart_as_admin`]
+//! - [`InstanceScope`]
 //!
 //! # Example
 //!
@@ -65,6 +67,8 @@
 //!   `SHGetKnownFolderPath`.
 //! - [`single_instance`] uses a `Local\...` named mutex, so the lock is scoped to the
 //!   current Windows session, and `app_id` cannot contain backslashes.
+//! - [`single_instance_with_scope`] can opt into either the current-session or global
+//!   mutex namespace.
 //! - [`restart_as_admin`] starts a new elevated instance of the current executable,
 //!   does not terminate the current process, and rejects arguments containing NUL bytes.
 
@@ -88,7 +92,7 @@ pub use error::{Error, Result};
 #[cfg(windows)]
 pub use elevation::{is_elevated, restart_as_admin};
 #[cfg(windows)]
-pub use instance::{single_instance, InstanceGuard};
+pub use instance::{single_instance, single_instance_with_scope, InstanceGuard, InstanceScope};
 #[cfg(windows)]
 pub use paths::{ensure_local_app_data, ensure_roaming_app_data, local_app_data, roaming_app_data};
 #[cfg(windows)]
