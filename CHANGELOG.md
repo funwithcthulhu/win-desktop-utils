@@ -2,7 +2,7 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
-## Unreleased
+## 0.5.2 - 2026-05-02
 
 - Centralized shared private Windows helper code for COM apartments, shell execution, argument quoting, string normalization, and wide-string conversion.
 - Added ignored manual Windows desktop smoke tests and `cargo xtask smoke`.
