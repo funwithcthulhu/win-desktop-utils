@@ -78,6 +78,7 @@ Notable error distinctions include:
 - `open_url` only checks that the URL string is non-empty after trimming; deeper URL validation is delegated to the Windows shell.
 - `reveal_in_explorer` requires an existing path and launches `explorer.exe`.
 - `move_to_recycle_bin` requires an absolute existing path and uses `SHFileOperationW` with undo enabled.
+- `roaming_app_data` and `local_app_data` resolve the base directory via `SHGetKnownFolderPath`.
 - `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
 - Keep the returned `InstanceGuard` alive for as long as the process should own the single-instance lock.
 - `restart_as_admin` starts a new elevated instance of the current executable and does not terminate the current process.

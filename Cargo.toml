@@ -1,6 +1,6 @@
 [package]
 name = "win-desktop-utils"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 rust-version = "1.94"
 license = "MIT OR Apache-2.0"
@@ -15,6 +15,7 @@ categories = ["os::windows-apis", "api-bindings"]
 [dependencies]
 windows = { version = "0.62.2", features = [
     "Win32_Foundation",
+    "Win32_System_Com",
     "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
     "Win32_System_Threading",
