@@ -2,6 +2,15 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## Unreleased
+
+- Added crate feature flags so consumers can opt into focused API groups.
+- Added `DesktopApp` as a convenience facade for app-data and single-instance startup workflows.
+- Expanded crate-level docs into a docs.rs-oriented manual with feature flags, workflows, and side-effect notes.
+- Added a cookbook with copy-paste recipes for common Windows desktop app tasks.
+- Improved crate discoverability metadata with shortcut and Explorer-oriented keywords.
+- Added contribution guidelines, security policy, and GitHub issue templates.
+
 ## 0.3.0
 
 - Lowered the crate MSRV from Rust 1.94 to Rust 1.82.

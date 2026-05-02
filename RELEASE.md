@@ -10,6 +10,14 @@ Use this checklist before publishing a new `win-desktop-utils` release.
    cargo test
    cargo clippy --all-targets --all-features -- -D warnings
    cargo check --examples
+   cargo check --no-default-features
+   cargo check --no-default-features --features app
+   cargo check --no-default-features --features elevation
+   cargo check --no-default-features --features instance
+   cargo check --no-default-features --features paths
+   cargo check --no-default-features --features recycle-bin
+   cargo check --no-default-features --features shell
+   cargo check --no-default-features --features shortcuts
    cargo doc --no-deps
    cargo package
    cargo publish --dry-run

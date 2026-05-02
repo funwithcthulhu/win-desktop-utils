@@ -2,22 +2,32 @@
 
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+#[cfg(feature = "recycle-bin")]
+use std::path::PathBuf;
+#[cfg(feature = "shell")]
 use std::process::Command;
+#[cfg(feature = "recycle-bin")]
 use std::thread;
 
 use windows::core::PCWSTR;
+#[cfg(feature = "shell")]
 use windows::Win32::Foundation::HWND;
+#[cfg(feature = "recycle-bin")]
 use windows::Win32::System::Com::{
     CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER,
     COINIT_APARTMENTTHREADED,
 };
+#[cfg(feature = "shell")]
+use windows::Win32::UI::Shell::ShellExecuteW;
+#[cfg(feature = "recycle-bin")]
 use windows::Win32::UI::Shell::{
     FileOperation, IFileOperation, IFileOperationProgressSink, IShellItem,
-    SHCreateItemFromParsingName, SHEmptyRecycleBinW, ShellExecuteW, FOFX_RECYCLEONDELETE,
-    FOF_ALLOWUNDO, FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, SHERB_NOCONFIRMATION,
-    SHERB_NOPROGRESSUI, SHERB_NOSOUND,
+    SHCreateItemFromParsingName, SHEmptyRecycleBinW, FOFX_RECYCLEONDELETE, FOF_ALLOWUNDO,
+    FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, SHERB_NOCONFIRMATION, SHERB_NOPROGRESSUI,
+    SHERB_NOSOUND,
 };
+#[cfg(feature = "shell")]
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
 use crate::error::{Error, Result};
@@ -26,6 +36,7 @@ fn to_wide_os(value: &OsStr) -> Vec<u16> {
     value.encode_wide().chain(std::iter::once(0)).collect()
 }
 
+#[cfg(feature = "shell")]
 fn to_wide_str(value: &str) -> Vec<u16> {
     OsStr::new(value)
         .encode_wide()
@@ -33,6 +44,7 @@ fn to_wide_str(value: &str) -> Vec<u16> {
         .collect()
 }
 
+#[cfg(feature = "shell")]
 fn normalize_url(url: &str) -> Result<&str> {
     let trimmed = url.trim();
 
@@ -47,6 +59,7 @@ fn normalize_url(url: &str) -> Result<&str> {
     Ok(trimmed)
 }
 
+#[cfg(feature = "shell")]
 fn normalize_shell_verb(verb: &str) -> Result<&str> {
     let trimmed = verb.trim();
 
@@ -61,8 +74,10 @@ fn normalize_shell_verb(verb: &str) -> Result<&str> {
     Ok(trimmed)
 }
 
+#[cfg(feature = "recycle-bin")]
 struct ComApartment;
 
+#[cfg(feature = "recycle-bin")]
 impl ComApartment {
     fn initialize_sta() -> Result<Self> {
         let result = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
@@ -78,6 +93,7 @@ impl ComApartment {
     }
 }
 
+#[cfg(feature = "recycle-bin")]
 impl Drop for ComApartment {
     fn drop(&mut self) {
         unsafe {
@@ -86,6 +102,7 @@ impl Drop for ComApartment {
     }
 }
 
+#[cfg(feature = "shell")]
 fn shell_execute_raw(verb: &str, target: &OsStr) -> Result<()> {
     let operation = to_wide_str(verb);
     let target_w = to_wide_os(target);
@@ -112,6 +129,7 @@ fn shell_execute_raw(verb: &str, target: &OsStr) -> Result<()> {
     }
 }
 
+#[cfg(feature = "recycle-bin")]
 fn shell_item_from_path(path: &Path) -> Result<IShellItem> {
     let path_w = to_wide_os(path.as_os_str());
 
@@ -123,6 +141,7 @@ fn shell_item_from_path(path: &Path) -> Result<IShellItem> {
     })
 }
 
+#[cfg(feature = "recycle-bin")]
 fn validate_recycle_path(path: &Path) -> Result<()> {
     if path.as_os_str().is_empty() {
         return Err(Error::InvalidInput("path cannot be empty"));
@@ -139,6 +158,7 @@ fn validate_recycle_path(path: &Path) -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "recycle-bin")]
 fn collect_recycle_paths<I, P>(paths: I) -> Result<Vec<PathBuf>>
 where
     I: IntoIterator<Item = P>,
@@ -159,6 +179,7 @@ where
     }
 }
 
+#[cfg(feature = "recycle-bin")]
 fn queue_recycle_item(operation: &IFileOperation, path: &Path) -> Result<()> {
     let item = shell_item_from_path(path)?;
 
@@ -170,6 +191,7 @@ fn queue_recycle_item(operation: &IFileOperation, path: &Path) -> Result<()> {
     )
 }
 
+#[cfg(feature = "recycle-bin")]
 fn recycle_paths_in_sta(paths: &[PathBuf]) -> Result<()> {
     let _com = ComApartment::initialize_sta()?;
     let operation: IFileOperation = unsafe {
@@ -213,6 +235,7 @@ fn recycle_paths_in_sta(paths: &[PathBuf]) -> Result<()> {
     }
 }
 
+#[cfg(feature = "recycle-bin")]
 fn empty_recycle_bin_raw(root_path: Option<&Path>) -> Result<()> {
     let root_w = root_path.map(|path| to_wide_os(path.as_os_str()));
     let root_ptr = root_w
@@ -226,6 +249,7 @@ fn empty_recycle_bin_raw(root_path: Option<&Path>) -> Result<()> {
     })
 }
 
+#[cfg(feature = "recycle-bin")]
 fn run_in_shell_sta<T, F>(work: F) -> Result<T>
 where
     T: Send + 'static,
@@ -251,6 +275,7 @@ where
 /// win_desktop_utils::open_with_default(r"C:\Windows\notepad.exe")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "shell")]
 pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
     open_with_verb("open", target)
 }
@@ -273,6 +298,7 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
 /// win_desktop_utils::open_with_verb("properties", r"C:\Windows\notepad.exe")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "shell")]
 pub fn open_with_verb(verb: &str, target: impl AsRef<Path>) -> Result<()> {
     let verb = normalize_shell_verb(verb)?;
     let path = target.as_ref();
@@ -305,6 +331,7 @@ pub fn open_with_verb(verb: &str, target: impl AsRef<Path>) -> Result<()> {
 /// win_desktop_utils::show_properties(r"C:\Windows\notepad.exe")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "shell")]
 pub fn show_properties(target: impl AsRef<Path>) -> Result<()> {
     open_with_verb("properties", target)
 }
@@ -326,6 +353,7 @@ pub fn show_properties(target: impl AsRef<Path>) -> Result<()> {
 /// win_desktop_utils::print_with_default(r"C:\Users\Public\Documents\sample.txt")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "shell")]
 pub fn print_with_default(target: impl AsRef<Path>) -> Result<()> {
     open_with_verb("print", target)
 }
@@ -346,6 +374,7 @@ pub fn print_with_default(target: impl AsRef<Path>) -> Result<()> {
 /// win_desktop_utils::open_url("https://www.rust-lang.org")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "shell")]
 pub fn open_url(url: &str) -> Result<()> {
     let url = normalize_url(url)?;
     shell_execute_raw("open", OsStr::new(url))
@@ -367,6 +396,7 @@ pub fn open_url(url: &str) -> Result<()> {
 /// win_desktop_utils::reveal_in_explorer(r"C:\Windows\notepad.exe")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "shell")]
 pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
 
@@ -400,6 +430,7 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
 /// win_desktop_utils::open_containing_folder(r"C:\Windows\notepad.exe")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "shell")]
 pub fn open_containing_folder(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
 
@@ -446,6 +477,7 @@ pub fn open_containing_folder(path: impl AsRef<Path>) -> Result<()> {
 /// win_desktop_utils::move_to_recycle_bin(&path)?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[cfg(feature = "recycle-bin")]
 pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     validate_recycle_path(path)?;
@@ -479,6 +511,7 @@ pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
 /// win_desktop_utils::move_paths_to_recycle_bin([&first, &second])?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[cfg(feature = "recycle-bin")]
 pub fn move_paths_to_recycle_bin<I, P>(paths: I) -> Result<()>
 where
     I: IntoIterator<Item = P>,
@@ -502,6 +535,7 @@ where
 /// win_desktop_utils::empty_recycle_bin()?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "recycle-bin")]
 pub fn empty_recycle_bin() -> Result<()> {
     empty_recycle_bin_raw(None)
 }
@@ -523,6 +557,7 @@ pub fn empty_recycle_bin() -> Result<()> {
 /// win_desktop_utils::empty_recycle_bin_for_root(r"C:\")?;
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
+#[cfg(feature = "recycle-bin")]
 pub fn empty_recycle_bin_for_root(root_path: impl AsRef<Path>) -> Result<()> {
     let root_path = root_path.as_ref();
 
@@ -543,9 +578,14 @@ pub fn empty_recycle_bin_for_root(root_path: impl AsRef<Path>) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{collect_recycle_paths, normalize_shell_verb, normalize_url};
+    #[cfg(feature = "recycle-bin")]
+    use super::collect_recycle_paths;
+    #[cfg(feature = "shell")]
+    use super::{normalize_shell_verb, normalize_url};
+    #[cfg(feature = "recycle-bin")]
     use std::path::PathBuf;
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_url_rejects_empty_string() {
         let result = normalize_url("");
@@ -555,6 +595,7 @@ mod tests {
         ));
     }
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_url_rejects_whitespace_only() {
         let result = normalize_url("   ");
@@ -564,6 +605,7 @@ mod tests {
         ));
     }
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_url_trims_surrounding_whitespace() {
         assert_eq!(
@@ -572,6 +614,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_url_rejects_nul_bytes() {
         let result = normalize_url("https://example.com/\0hidden");
@@ -581,6 +624,7 @@ mod tests {
         ));
     }
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_shell_verb_rejects_empty_string() {
         let result = normalize_shell_verb("");
@@ -590,6 +634,7 @@ mod tests {
         ));
     }
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_shell_verb_rejects_whitespace_only() {
         let result = normalize_shell_verb("   ");
@@ -599,6 +644,7 @@ mod tests {
         ));
     }
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_shell_verb_trims_surrounding_whitespace() {
         assert_eq!(
@@ -607,6 +653,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "shell")]
     #[test]
     fn normalize_shell_verb_rejects_nul_bytes() {
         let result = normalize_shell_verb("pro\0perties");
@@ -616,6 +663,7 @@ mod tests {
         ));
     }
 
+    #[cfg(feature = "recycle-bin")]
     #[test]
     fn collect_recycle_paths_rejects_empty_collection() {
         let paths: [PathBuf; 0] = [];

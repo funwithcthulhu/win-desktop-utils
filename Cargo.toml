@@ -4,13 +4,31 @@ version = "0.3.0"
 edition = "2021"
 rust-version = "1.82"
 license = "MIT OR Apache-2.0"
-description = "Windows-first desktop utility helpers for Rust apps"
+description = "Windows desktop helpers for shell, shortcuts, app data, elevation, and single-instance Rust apps"
 readme = "README.md"
 repository = "https://github.com/funwithcthulhu/win-desktop-utils"
 homepage = "https://github.com/funwithcthulhu/win-desktop-utils"
 documentation = "https://docs.rs/win-desktop-utils"
-keywords = ["windows", "desktop", "win32", "shell"]
+keywords = ["windows", "desktop", "shortcut", "explorer", "win32"]
 categories = ["os::windows-apis", "api-bindings"]
+
+[features]
+default = [
+    "app",
+    "elevation",
+    "instance",
+    "paths",
+    "recycle-bin",
+    "shell",
+    "shortcuts",
+]
+app = ["instance", "paths"]
+elevation = ["dep:windows"]
+instance = ["dep:windows"]
+paths = ["dep:windows"]
+recycle-bin = ["dep:windows"]
+shell = ["dep:windows"]
+shortcuts = ["dep:windows"]
 
 [dependencies]
 windows = { version = "0.62.2", features = [
@@ -20,8 +38,9 @@ windows = { version = "0.62.2", features = [
     "Win32_UI_WindowsAndMessaging",
     "Win32_System_Threading",
     "Win32_Security",
-] }
+], optional = true }
 
 [package.metadata.docs.rs]
+all-features = true
 default-target = "x86_64-pc-windows-msvc"
 targets = ["x86_64-pc-windows-msvc"]

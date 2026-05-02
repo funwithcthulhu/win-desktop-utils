@@ -48,6 +48,17 @@ jobs:
       - name: Check examples
         run: cargo check --examples
 
+      - name: Check feature sets
+        run: |
+          cargo check --no-default-features
+          cargo check --no-default-features --features app
+          cargo check --no-default-features --features elevation
+          cargo check --no-default-features --features instance
+          cargo check --no-default-features --features paths
+          cargo check --no-default-features --features recycle-bin
+          cargo check --no-default-features --features shell
+          cargo check --no-default-features --features shortcuts
+
       - name: Build docs
         run: cargo doc --no-deps
 

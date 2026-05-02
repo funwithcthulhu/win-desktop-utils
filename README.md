@@ -4,9 +4,11 @@
 [![Docs.rs](https://docs.rs/win-desktop-utils/badge.svg)](https://docs.rs/win-desktop-utils)
 [![CI](https://github.com/funwithcthulhu/win-desktop-utils/actions/workflows/ci.yml/badge.svg)](https://github.com/funwithcthulhu/win-desktop-utils/actions/workflows/ci.yml)
 
-Windows-first desktop utility helpers for Rust apps.
+Windows desktop helpers for Rust apps.
 
-`win-desktop-utils` provides small, focused helpers for common Windows desktop-app tasks without forcing consumers to work directly with raw Win32 shell, shortcut, mutex, known-folder, and elevation APIs.
+`win-desktop-utils` wraps the small but fiddly Windows desktop tasks that show up in real apps: shell opening, Explorer reveal, Recycle Bin moves, shortcuts, app-data paths, single-instance locks, and elevation prompts.
+
+Use the low-level helpers directly, or start with `DesktopApp` for the common “app identity, app-data directory, and single-instance guard” workflow.
 
 ## Scope
 
@@ -37,11 +39,20 @@ This crate supports Windows only.
 win-desktop-utils = "0.3"
 ```
 
+Default features enable the full API. To keep a dependency focused, disable defaults and opt into only the modules you need:
+
+```toml
+[dependencies]
+win-desktop-utils = { version = "0.3", default-features = false, features = ["paths", "instance"] }
+```
+
 ## Quick Start
 
 ```rust
 fn main() -> Result<(), win_desktop_utils::Error> {
-    let _guard = match win_desktop_utils::single_instance("demo-app")? {
+    let app = win_desktop_utils::DesktopApp::new("demo-app")?;
+
+    let _guard = match app.single_instance()? {
         Some(guard) => guard,
         None => {
             println!("already running");
@@ -49,15 +60,26 @@ fn main() -> Result<(), win_desktop_utils::Error> {
         }
     };
 
-    let local = win_desktop_utils::ensure_local_app_data("demo-app")?;
+    let local = app.ensure_local_data_dir()?;
     println!("local app dir: {}", local.display());
 
     Ok(())
 }
 ```
 
+## Feature Flags
+
+- `app`: `DesktopApp` facade for app-data and single-instance startup.
+- `paths`: per-user local and roaming app-data helpers.
+- `instance`: named-mutex single-instance helpers.
+- `shell`: shell opening, URL, Explorer, and shell-verb helpers.
+- `recycle-bin`: Recycle Bin move and empty helpers.
+- `shortcuts`: `.lnk` and `.url` shortcut helpers.
+- `elevation`: elevation detection and shell-based relaunch helpers.
+
 ## Current API
 
+- `DesktopApp`
 - `open_with_default(path)`
 - `open_with_verb(verb, path)`
 - `show_properties(path)`
@@ -86,6 +108,17 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 - `SingleInstanceOptions`
 - `ShortcutOptions`
 - `ShortcutIcon`
+
+## Cookbook
+
+The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md) file has copy-paste recipes for:
+
+- starting a single-instance app
+- creating local and roaming app-data folders
+- opening files, URLs, folders, and Properties
+- creating `.lnk` and `.url` shortcuts
+- relaunching as administrator
+- moving files to the Recycle Bin
 
 ## Examples
 
@@ -155,9 +188,17 @@ The crate includes:
 
 The minimum supported Rust version is `1.82`, matching the current `windows` crate dependency floor.
 
+## Support Policy
+
+- Supported OS family: Windows 10 and Windows 11.
+- Supported Rust: 1.82 and newer.
+- Public API compatibility is checked with `cargo-semver-checks`.
+- Dependency advisories, licenses, duplicate versions, and sources are checked with `cargo-deny`.
+
 ## Links
 
 - Crates.io: https://crates.io/crates/win-desktop-utils
 - Docs: https://docs.rs/win-desktop-utils
 - Repository: https://github.com/funwithcthulhu/win-desktop-utils
 - Changelog: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/CHANGELOG.md
+- Cookbook: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md

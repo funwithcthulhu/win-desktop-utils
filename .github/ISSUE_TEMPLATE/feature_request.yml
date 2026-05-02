@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a Windows desktop helper or documentation improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow
+      description: What Windows desktop app workflow would this help?
+    validations:
+      required: true
+  - type: textarea
+    id: api
+    attributes:
+      label: Possible API
+      description: If you have an API shape in mind, sketch it here.
+      render: rust
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: What are you using today?
+    validations:
+      required: false
