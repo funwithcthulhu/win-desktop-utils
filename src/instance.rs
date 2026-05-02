@@ -28,6 +28,72 @@ impl InstanceScope {
     }
 }
 
+/// Options for single-instance mutex acquisition.
+///
+/// This builder is useful when an application wants to keep the single-instance
+/// configuration close to startup code while still using the default current-session
+/// behavior most of the time.
+///
+/// # Examples
+///
+/// ```
+/// let options = win_desktop_utils::SingleInstanceOptions::new(format!(
+///     "demo-options-{}",
+///     std::process::id()
+/// ))
+///     .scope(win_desktop_utils::InstanceScope::CurrentSession);
+///
+/// let guard = win_desktop_utils::single_instance_with_options(&options)?;
+/// assert!(guard.is_some());
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SingleInstanceOptions {
+    app_id: String,
+    scope: InstanceScope,
+}
+
+impl SingleInstanceOptions {
+    /// Creates options for the current Windows session namespace.
+    pub fn new(app_id: impl Into<String>) -> Self {
+        Self {
+            app_id: app_id.into(),
+            scope: InstanceScope::CurrentSession,
+        }
+    }
+
+    /// Creates options for the current Windows session namespace.
+    pub fn current_session(app_id: impl Into<String>) -> Self {
+        Self::new(app_id)
+    }
+
+    /// Creates options for the global Windows namespace.
+    pub fn global(app_id: impl Into<String>) -> Self {
+        Self::new(app_id).scope(InstanceScope::Global)
+    }
+
+    /// Sets the mutex namespace scope.
+    pub fn scope(mut self, scope: InstanceScope) -> Self {
+        self.scope = scope;
+        self
+    }
+
+    /// Returns the configured application ID.
+    pub fn app_id(&self) -> &str {
+        &self.app_id
+    }
+
+    /// Returns the configured mutex namespace scope.
+    pub fn configured_scope(&self) -> InstanceScope {
+        self.scope
+    }
+
+    /// Attempts to acquire the configured single-instance guard.
+    pub fn acquire(&self) -> Result<Option<InstanceGuard>> {
+        single_instance_with_options(self)
+    }
+}
+
 /// Guard that keeps the named single-instance mutex alive for the current process.
 ///
 /// Dropping this value releases the underlying mutex handle.
@@ -164,9 +230,37 @@ pub fn single_instance_with_scope(
     }
 }
 
+/// Attempts to acquire a named single-instance guard using [`SingleInstanceOptions`].
+///
+/// This is equivalent to calling [`single_instance_with_scope`] with the configured
+/// application ID and scope.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if the configured `app_id` is empty, contains only
+/// whitespace, contains NUL bytes, or contains backslashes.
+/// Returns [`Error::WindowsApi`] if `CreateMutexW` fails.
+///
+/// # Examples
+///
+/// ```
+/// let options = win_desktop_utils::SingleInstanceOptions::global(
+///     format!("demo-options-{}", std::process::id()),
+/// );
+/// let guard = win_desktop_utils::single_instance_with_options(&options)?;
+/// assert!(guard.is_some());
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+#[must_use = "store the returned guard for as long as the process should be considered the active instance"]
+pub fn single_instance_with_options(
+    options: &SingleInstanceOptions,
+) -> Result<Option<InstanceGuard>> {
+    single_instance_with_scope(options.app_id(), options.configured_scope())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{mutex_name, validate_app_id, InstanceScope};
+    use super::{mutex_name, validate_app_id, InstanceScope, SingleInstanceOptions};
 
     #[test]
     fn validate_app_id_rejects_empty_string() {
@@ -213,5 +307,18 @@ mod tests {
             mutex_name("demo-app", InstanceScope::Global),
             "Global\\win_desktop_utils_demo-app"
         );
+    }
+
+    #[test]
+    fn options_default_to_current_session_scope() {
+        let options = SingleInstanceOptions::new("demo-app");
+        assert_eq!(options.app_id(), "demo-app");
+        assert_eq!(options.configured_scope(), InstanceScope::CurrentSession);
+    }
+
+    #[test]
+    fn options_can_use_global_scope() {
+        let options = SingleInstanceOptions::global("demo-app");
+        assert_eq!(options.configured_scope(), InstanceScope::Global);
     }
 }

@@ -2,6 +2,17 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## 0.3.0
+
+- Lowered the crate MSRV from Rust 1.94 to Rust 1.82.
+- Added `.lnk` shortcut creation with `create_shortcut`, `ShortcutOptions`, and `ShortcutIcon`.
+- Added Internet Shortcut creation with `create_url_shortcut`.
+- Added arbitrary shell-verb command launching with `run_with_verb` and `run_as_admin`.
+- Added shell convenience helpers: `show_properties`, `print_with_default`, and `open_containing_folder`.
+- Added silent Recycle Bin emptying helpers with `empty_recycle_bin` and `empty_recycle_bin_for_root`.
+- Added `SingleInstanceOptions` and `single_instance_with_options` for builder-style single-instance configuration.
+- Added README badges, release notes, shortcut examples, MSRV CI, cargo-deny configuration, and semver-checks CI.
+
 ## 0.2.2
 
 - Added `InstanceScope` and `single_instance_with_scope` for choosing current-session or global single-instance mutexes.

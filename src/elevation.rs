@@ -63,17 +63,89 @@ fn join_args_for_shell_execute(args: &[OsString]) -> String {
         .join(" ")
 }
 
-fn validate_restart_args(args: &[OsString]) -> Result<()> {
+fn validate_shell_args(args: &[OsString], message: &'static str) -> Result<()> {
     if args
         .iter()
         .any(|arg| arg.as_os_str().encode_wide().any(|unit| unit == 0))
     {
-        return Err(Error::InvalidInput(
-            "restart arguments cannot contain NUL bytes",
-        ));
+        return Err(Error::InvalidInput(message));
     }
 
     Ok(())
+}
+
+fn validate_restart_args(args: &[OsString]) -> Result<()> {
+    validate_shell_args(args, "restart arguments cannot contain NUL bytes")
+}
+
+fn validate_command_args(args: &[OsString]) -> Result<()> {
+    validate_shell_args(args, "arguments cannot contain NUL bytes")
+}
+
+fn validate_executable(executable: &OsStr) -> Result<()> {
+    if executable.is_empty() {
+        return Err(Error::InvalidInput("executable cannot be empty"));
+    }
+
+    if executable.encode_wide().any(|unit| unit == 0) {
+        return Err(Error::InvalidInput("executable cannot contain NUL bytes"));
+    }
+
+    Ok(())
+}
+
+fn normalize_shell_verb(verb: &str) -> Result<&str> {
+    let trimmed = verb.trim();
+
+    if trimmed.is_empty() {
+        return Err(Error::InvalidInput("verb cannot be empty"));
+    }
+
+    if trimmed.contains('\0') {
+        return Err(Error::InvalidInput("verb cannot contain NUL bytes"));
+    }
+
+    Ok(trimmed)
+}
+
+fn shell_execute_command(
+    verb: &str,
+    executable: &OsStr,
+    args: &[OsString],
+    context: &'static str,
+) -> Result<()> {
+    let verb_w = to_wide_str(verb);
+    let executable_w = to_wide_os(executable);
+    let joined_args = join_args_for_shell_execute(args);
+    let args_w = if joined_args.is_empty() {
+        None
+    } else {
+        Some(to_wide_str(&joined_args))
+    };
+    let args_ptr = args_w
+        .as_ref()
+        .map_or(PCWSTR::null(), |args| PCWSTR(args.as_ptr()));
+
+    let result = unsafe {
+        ShellExecuteW(
+            Some(HWND::default()),
+            PCWSTR(verb_w.as_ptr()),
+            PCWSTR(executable_w.as_ptr()),
+            args_ptr,
+            PCWSTR::null(),
+            SW_SHOWNORMAL,
+        )
+    };
+
+    let code = result.0 as isize;
+    if code <= 32 {
+        Err(Error::WindowsApi {
+            context,
+            code: code as i32,
+        })
+    } else {
+        Ok(())
+    }
 }
 
 /// Returns `true` if the current process is running elevated.
@@ -123,37 +195,71 @@ pub fn restart_as_admin(args: &[OsString]) -> Result<()> {
     validate_restart_args(args)?;
 
     let exe = std::env::current_exe()?;
-    let exe_w = to_wide_os(exe.as_os_str());
+    shell_execute_command("runas", exe.as_os_str(), args, "ShellExecuteW(runas)")
+}
 
-    let verb_w = to_wide_str("runas");
-    let joined_args = join_args_for_shell_execute(args);
-    let args_w = to_wide_str(&joined_args);
+/// Launches an executable with elevation using the Windows `runas` shell verb.
+///
+/// Unlike [`restart_as_admin`], this function can start any executable or command
+/// resolvable by the Windows shell.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `executable` is empty or contains NUL bytes,
+/// or if any argument contains NUL bytes.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::ffi::OsString;
+///
+/// let args = [OsString::from("/c"), OsString::from("echo elevated")];
+/// win_desktop_utils::run_as_admin("cmd.exe", &args)?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn run_as_admin(executable: impl AsRef<OsStr>, args: &[OsString]) -> Result<()> {
+    run_with_verb("runas", executable, args)
+}
 
-    let result = unsafe {
-        ShellExecuteW(
-            Some(HWND::default()),
-            PCWSTR(verb_w.as_ptr()),
-            PCWSTR(exe_w.as_ptr()),
-            PCWSTR(args_w.as_ptr()),
-            PCWSTR::null(),
-            SW_SHOWNORMAL,
-        )
-    };
+/// Launches an executable through `ShellExecuteW` using an explicit shell verb.
+///
+/// This is useful for verbs such as `open` and `runas` when you need to pass a
+/// command-line argument list.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `verb` is empty, whitespace only, or contains
+/// NUL bytes, if `executable` is empty or contains NUL bytes, or if any argument
+/// contains NUL bytes.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::ffi::OsString;
+///
+/// let args = [OsString::from("--help")];
+/// win_desktop_utils::run_with_verb("open", "notepad.exe", &args)?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn run_with_verb(verb: &str, executable: impl AsRef<OsStr>, args: &[OsString]) -> Result<()> {
+    let verb = normalize_shell_verb(verb)?;
+    let executable = executable.as_ref();
 
-    let code = result.0 as isize;
-    if code <= 32 {
-        Err(Error::WindowsApi {
-            context: "ShellExecuteW(runas)",
-            code: code as i32,
-        })
-    } else {
-        Ok(())
-    }
+    validate_executable(executable)?;
+    validate_command_args(args)?;
+
+    shell_execute_command(verb, executable, args, "ShellExecuteW")
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{join_args_for_shell_execute, validate_restart_args};
+    use super::{
+        join_args_for_shell_execute, normalize_shell_verb, validate_command_args,
+        validate_executable, validate_restart_args,
+    };
+    use std::ffi::OsStr;
     use std::ffi::OsString;
 
     #[test]
@@ -196,5 +302,51 @@ mod tests {
                 "restart arguments cannot contain NUL bytes"
             ))
         ));
+    }
+
+    #[test]
+    fn validate_command_args_rejects_nul_bytes() {
+        let args = [OsString::from("hello\0world")];
+        let result = validate_command_args(&args);
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput(
+                "arguments cannot contain NUL bytes"
+            ))
+        ));
+    }
+
+    #[test]
+    fn validate_executable_rejects_empty_string() {
+        let result = validate_executable(OsStr::new(""));
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("executable cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn validate_executable_rejects_nul_bytes() {
+        let result = validate_executable(OsStr::new("cmd\0.exe"));
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput(
+                "executable cannot contain NUL bytes"
+            ))
+        ));
+    }
+
+    #[test]
+    fn normalize_shell_verb_rejects_empty_string() {
+        let result = normalize_shell_verb("");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("verb cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn normalize_shell_verb_trims_surrounding_whitespace() {
+        assert_eq!(normalize_shell_verb("  runas  ").unwrap(), "runas");
     }
 }

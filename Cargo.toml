@@ -1,8 +1,8 @@
 [package]
 name = "win-desktop-utils"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
-rust-version = "1.94"
+rust-version = "1.82"
 license = "MIT OR Apache-2.0"
 description = "Windows-first desktop utility helpers for Rust apps"
 readme = "README.md"

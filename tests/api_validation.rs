@@ -1,9 +1,12 @@
+use std::ffi::OsString;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use win_desktop_utils::{
-    move_paths_to_recycle_bin, move_to_recycle_bin, open_url, open_with_default, open_with_verb,
-    reveal_in_explorer, single_instance, single_instance_with_scope, Error, InstanceScope,
+    create_shortcut, create_url_shortcut, empty_recycle_bin_for_root, move_paths_to_recycle_bin,
+    move_to_recycle_bin, open_containing_folder, open_url, open_with_default, open_with_verb,
+    reveal_in_explorer, run_as_admin, run_with_verb, single_instance, single_instance_with_options,
+    single_instance_with_scope, Error, InstanceScope, ShortcutOptions, SingleInstanceOptions,
 };
 
 #[test]
@@ -41,6 +44,19 @@ fn open_with_verb_rejects_empty_path() {
 fn open_with_verb_rejects_missing_path() {
     let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-open-verb.tmp");
     let result = open_with_verb("open", path);
+    assert!(matches!(result, Err(Error::PathDoesNotExist)));
+}
+
+#[test]
+fn open_containing_folder_rejects_empty_path() {
+    let result = open_containing_folder(PathBuf::new());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn open_containing_folder_rejects_missing_path() {
+    let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-containing.tmp");
+    let result = open_containing_folder(path);
     assert!(matches!(result, Err(Error::PathDoesNotExist)));
 }
 
@@ -121,6 +137,115 @@ fn move_paths_to_recycle_bin_rejects_missing_absolute_path() {
 }
 
 #[test]
+fn empty_recycle_bin_for_root_rejects_empty_path() {
+    let result = empty_recycle_bin_for_root(PathBuf::new());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn empty_recycle_bin_for_root_rejects_relative_path() {
+    let result = empty_recycle_bin_for_root(PathBuf::from("relative-root"));
+    assert!(matches!(result, Err(Error::PathNotAbsolute)));
+}
+
+#[test]
+fn run_as_admin_rejects_empty_executable() {
+    let args: [OsString; 0] = [];
+    let result = run_as_admin("", &args);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn run_with_verb_rejects_empty_verb() {
+    let args: [OsString; 0] = [];
+    let result = run_with_verb("", "cmd.exe", &args);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn run_with_verb_rejects_nul_bytes_in_executable() {
+    let args: [OsString; 0] = [];
+    let result = run_with_verb("open", "cmd\0.exe", &args);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn run_with_verb_rejects_nul_bytes_in_arguments() {
+    let args = [OsString::from("hello\0world")];
+    let result = run_with_verb("open", "cmd.exe", &args);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn create_shortcut_rejects_empty_shortcut_path() {
+    let options = ShortcutOptions::new();
+    let result = create_shortcut(PathBuf::new(), r"C:\Windows\notepad.exe", &options);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn create_shortcut_rejects_relative_shortcut_path() {
+    let options = ShortcutOptions::new();
+    let result = create_shortcut("demo.lnk", r"C:\Windows\notepad.exe", &options);
+    assert!(matches!(result, Err(Error::PathNotAbsolute)));
+}
+
+#[test]
+fn create_shortcut_rejects_wrong_extension() {
+    let options = ShortcutOptions::new();
+    let path = std::env::temp_dir().join("win-desktop-utils-shortcut-test.txt");
+    let result = create_shortcut(path, r"C:\Windows\notepad.exe", &options);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn create_shortcut_rejects_relative_target_path() {
+    let options = ShortcutOptions::new();
+    let path = std::env::temp_dir().join("win-desktop-utils-shortcut-test.lnk");
+    let result = create_shortcut(path, "relative-target.exe", &options);
+    assert!(matches!(result, Err(Error::PathNotAbsolute)));
+}
+
+#[test]
+fn create_shortcut_creates_lnk_file() {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let path = std::env::temp_dir().join(format!(
+        "win-desktop-utils-shortcut-test-{}-{unique}.lnk",
+        std::process::id()
+    ));
+    let _ = std::fs::remove_file(&path);
+
+    let target = std::env::current_exe().unwrap();
+    let working_directory = target.parent().unwrap();
+    let options = ShortcutOptions::new()
+        .argument("--help")
+        .working_directory(working_directory)
+        .description("win-desktop-utils test shortcut");
+
+    create_shortcut(&path, &target, &options).unwrap();
+    assert!(path.exists());
+
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
+fn create_url_shortcut_rejects_wrong_extension() {
+    let path = std::env::temp_dir().join("win-desktop-utils-url-shortcut-test.txt");
+    let result = create_url_shortcut(path, "https://example.com");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn create_url_shortcut_rejects_line_breaks() {
+    let path = std::env::temp_dir().join("win-desktop-utils-url-shortcut-test.url");
+    let result = create_url_shortcut(path, "https://example.com/\nIconFile=bad.ico");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
 fn single_instance_rejects_empty_app_id() {
     let result = single_instance("");
     assert!(matches!(result, Err(Error::InvalidInput(_))));
@@ -154,6 +279,26 @@ fn single_instance_with_scope_allows_global_scope() {
     assert!(first.is_some());
 
     let second = single_instance_with_scope(&app_id, InstanceScope::Global).unwrap();
+    assert!(second.is_none());
+}
+
+#[test]
+fn single_instance_with_options_allows_global_scope() {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let app_id = format!(
+        "win-desktop-utils-test-options-{}-{}",
+        std::process::id(),
+        unique
+    );
+    let options = SingleInstanceOptions::global(app_id);
+
+    let first = single_instance_with_options(&options).unwrap();
+    assert!(first.is_some());
+
+    let second = options.acquire().unwrap();
     assert!(second.is_none());
 }
 

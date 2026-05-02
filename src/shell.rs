@@ -14,8 +14,9 @@ use windows::Win32::System::Com::{
 };
 use windows::Win32::UI::Shell::{
     FileOperation, IFileOperation, IFileOperationProgressSink, IShellItem,
-    SHCreateItemFromParsingName, ShellExecuteW, FOFX_RECYCLEONDELETE, FOF_ALLOWUNDO,
-    FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT,
+    SHCreateItemFromParsingName, SHEmptyRecycleBinW, ShellExecuteW, FOFX_RECYCLEONDELETE,
+    FOF_ALLOWUNDO, FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, SHERB_NOCONFIRMATION,
+    SHERB_NOPROGRESSUI, SHERB_NOSOUND,
 };
 use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
@@ -212,6 +213,19 @@ fn recycle_paths_in_sta(paths: &[PathBuf]) -> Result<()> {
     }
 }
 
+fn empty_recycle_bin_raw(root_path: Option<&Path>) -> Result<()> {
+    let root_w = root_path.map(|path| to_wide_os(path.as_os_str()));
+    let root_ptr = root_w
+        .as_ref()
+        .map_or(PCWSTR::null(), |path| PCWSTR(path.as_ptr()));
+    let flags = SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND;
+
+    unsafe { SHEmptyRecycleBinW(None, root_ptr, flags) }.map_err(|err| Error::WindowsApi {
+        context: "SHEmptyRecycleBinW",
+        code: err.code().0,
+    })
+}
+
 fn run_in_shell_sta<T, F>(work: F) -> Result<T>
 where
     T: Send + 'static,
@@ -274,6 +288,48 @@ pub fn open_with_verb(verb: &str, target: impl AsRef<Path>) -> Result<()> {
     shell_execute_raw(verb, path.as_os_str())
 }
 
+/// Opens the Windows Properties sheet for a file or directory.
+///
+/// This is a convenience wrapper around [`open_with_verb`] using the `properties`
+/// shell verb.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `target` is empty.
+/// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::show_properties(r"C:\Windows\notepad.exe")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn show_properties(target: impl AsRef<Path>) -> Result<()> {
+    open_with_verb("properties", target)
+}
+
+/// Prints a file using its registered default print shell verb.
+///
+/// Not every file type has a registered `print` verb; unsupported handlers are
+/// reported as Windows shell errors.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `target` is empty.
+/// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::print_with_default(r"C:\Users\Public\Documents\sample.txt")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn print_with_default(target: impl AsRef<Path>) -> Result<()> {
+    open_with_verb("print", target)
+}
+
 /// Opens a URL with the user's default browser or registered handler.
 ///
 /// Surrounding whitespace is trimmed before the URL is passed to the Windows shell.
@@ -328,6 +384,44 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
         .spawn()?;
 
     Ok(())
+}
+
+/// Opens the directory containing an existing file or directory.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `path` is empty or has no containing directory.
+/// Returns [`Error::PathDoesNotExist`] if the path does not exist.
+/// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::open_containing_folder(r"C:\Windows\notepad.exe")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn open_containing_folder(path: impl AsRef<Path>) -> Result<()> {
+    let path = path.as_ref();
+
+    if path.as_os_str().is_empty() {
+        return Err(Error::InvalidInput("path cannot be empty"));
+    }
+
+    if !path.exists() {
+        return Err(Error::PathDoesNotExist);
+    }
+
+    let parent = path.parent().ok_or(Error::InvalidInput(
+        "path does not have a containing folder",
+    ))?;
+
+    if parent.as_os_str().is_empty() {
+        return Err(Error::InvalidInput(
+            "path does not have a containing folder",
+        ));
+    }
+
+    open_with_default(parent)
 }
 
 /// Sends a file or directory to the Windows Recycle Bin.
@@ -392,6 +486,59 @@ where
 {
     let paths = collect_recycle_paths(paths)?;
     run_in_shell_sta(move || recycle_paths_in_sta(&paths))
+}
+
+/// Permanently empties the Recycle Bin for all drives without shell UI.
+///
+/// This operation cannot be undone through this crate.
+///
+/// # Errors
+///
+/// Returns [`Error::WindowsApi`] if `SHEmptyRecycleBinW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::empty_recycle_bin()?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn empty_recycle_bin() -> Result<()> {
+    empty_recycle_bin_raw(None)
+}
+
+/// Permanently empties the Recycle Bin for a specific drive root without shell UI.
+///
+/// `root_path` should be an existing absolute drive root such as `C:\`.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if `root_path` is empty.
+/// Returns [`Error::PathNotAbsolute`] if `root_path` is not absolute.
+/// Returns [`Error::PathDoesNotExist`] if `root_path` does not exist.
+/// Returns [`Error::WindowsApi`] if `SHEmptyRecycleBinW` reports failure.
+///
+/// # Examples
+///
+/// ```no_run
+/// win_desktop_utils::empty_recycle_bin_for_root(r"C:\")?;
+/// # Ok::<(), win_desktop_utils::Error>(())
+/// ```
+pub fn empty_recycle_bin_for_root(root_path: impl AsRef<Path>) -> Result<()> {
+    let root_path = root_path.as_ref();
+
+    if root_path.as_os_str().is_empty() {
+        return Err(Error::InvalidInput("root_path cannot be empty"));
+    }
+
+    if !root_path.is_absolute() {
+        return Err(Error::PathNotAbsolute);
+    }
+
+    if !root_path.exists() {
+        return Err(Error::PathDoesNotExist);
+    }
+
+    empty_recycle_bin_raw(Some(root_path))
 }
 
 #[cfg(test)]
