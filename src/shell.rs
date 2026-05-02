@@ -1,3 +1,5 @@
+//! Shell-facing helpers for opening files, URLs, Explorer selections, and the Recycle Bin.
+
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
@@ -34,6 +36,20 @@ fn to_double_null_path(value: &Path) -> Vec<u16> {
         .chain(std::iter::once(0))
         .chain(std::iter::once(0))
         .collect()
+}
+
+fn normalize_url(url: &str) -> Result<&str> {
+    let trimmed = url.trim();
+
+    if trimmed.is_empty() {
+        return Err(Error::InvalidInput("url cannot be empty"));
+    }
+
+    if trimmed.contains('\0') {
+        return Err(Error::InvalidInput("url cannot contain NUL bytes"));
+    }
+
+    Ok(trimmed)
 }
 
 fn shell_open_raw(target: &OsStr) -> Result<()> {
@@ -92,12 +108,12 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
 
 /// Opens a URL with the user's default browser or registered handler.
 ///
-/// This function checks only that the input is non-empty after trimming whitespace.
+/// Surrounding whitespace is trimmed before the URL is passed to the Windows shell.
 /// URL validation is otherwise delegated to the Windows shell.
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `url` is empty or whitespace only.
+/// Returns [`Error::InvalidInput`] if `url` is empty, whitespace only, or contains NUL bytes.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 ///
 /// # Examples
@@ -107,10 +123,7 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
 pub fn open_url(url: &str) -> Result<()> {
-    if url.trim().is_empty() {
-        return Err(Error::InvalidInput("url cannot be empty"));
-    }
-
+    let url = normalize_url(url)?;
     shell_open_raw(OsStr::new(url))
 }
 
@@ -212,5 +225,45 @@ pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
         })
     } else {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_url;
+
+    #[test]
+    fn normalize_url_rejects_empty_string() {
+        let result = normalize_url("");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("url cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn normalize_url_rejects_whitespace_only() {
+        let result = normalize_url("   ");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("url cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn normalize_url_trims_surrounding_whitespace() {
+        assert_eq!(
+            normalize_url("  https://example.com/docs  ").unwrap(),
+            "https://example.com/docs"
+        );
+    }
+
+    #[test]
+    fn normalize_url_rejects_nul_bytes() {
+        let result = normalize_url("https://example.com/\0hidden");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("url cannot contain NUL bytes"))
+        ));
     }
 }

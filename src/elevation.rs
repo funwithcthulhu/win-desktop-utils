@@ -1,3 +1,5 @@
+//! Elevation helpers for checking admin state and relaunching through UAC.
+
 use std::ffi::{OsStr, OsString};
 use std::os::windows::ffi::OsStrExt;
 
@@ -61,6 +63,19 @@ fn join_args_for_shell_execute(args: &[OsString]) -> String {
         .join(" ")
 }
 
+fn validate_restart_args(args: &[OsString]) -> Result<()> {
+    if args
+        .iter()
+        .any(|arg| arg.as_os_str().encode_wide().any(|unit| unit == 0))
+    {
+        return Err(Error::InvalidInput(
+            "restart arguments cannot contain NUL bytes",
+        ));
+    }
+
+    Ok(())
+}
+
 /// Returns `true` if the current process is running elevated.
 ///
 /// # Errors
@@ -92,6 +107,7 @@ pub fn is_elevated() -> Result<bool> {
 /// # Errors
 ///
 /// Returns [`Error::Io`] if the current executable path cannot be resolved.
+/// Returns [`Error::InvalidInput`] if any argument contains NUL bytes.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 ///
 /// # Examples
@@ -104,6 +120,8 @@ pub fn is_elevated() -> Result<bool> {
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
 pub fn restart_as_admin(args: &[OsString]) -> Result<()> {
+    validate_restart_args(args)?;
+
     let exe = std::env::current_exe()?;
     let exe_w = to_wide_os(exe.as_os_str());
 
@@ -135,7 +153,7 @@ pub fn restart_as_admin(args: &[OsString]) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::join_args_for_shell_execute;
+    use super::{join_args_for_shell_execute, validate_restart_args};
     use std::ffi::OsString;
 
     #[test]
@@ -166,5 +184,17 @@ mod tests {
             join_args_for_shell_execute(&args),
             r#""C:\Program Files\demo\\""#
         );
+    }
+
+    #[test]
+    fn validate_restart_args_rejects_nul_bytes() {
+        let args = [OsString::from("hello\0world")];
+        let result = validate_restart_args(&args);
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput(
+                "restart arguments cannot contain NUL bytes"
+            ))
+        ));
     }
 }

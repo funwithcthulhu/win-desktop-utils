@@ -1,3 +1,5 @@
+//! Shared error and result types for the crate.
+
 /// Error type for `win-desktop-utils`.
 #[derive(Debug)]
 pub enum Error {

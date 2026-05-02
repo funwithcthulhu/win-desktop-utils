@@ -1,3 +1,5 @@
+//! Helpers for resolving and creating per-user application data directories.
+
 use std::ffi::OsString;
 use std::fs;
 use std::os::windows::ffi::OsStringExt;

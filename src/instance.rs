@@ -1,3 +1,5 @@
+//! Single-instance helpers backed by named Windows mutexes.
+
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 
@@ -31,6 +33,22 @@ fn to_wide_str(value: &str) -> Vec<u16> {
         .collect()
 }
 
+fn validate_app_id(app_id: &str) -> Result<()> {
+    if app_id.trim().is_empty() {
+        return Err(Error::InvalidInput("app_id cannot be empty"));
+    }
+
+    if app_id.contains('\0') {
+        return Err(Error::InvalidInput("app_id cannot contain NUL bytes"));
+    }
+
+    if app_id.contains('\\') {
+        return Err(Error::InvalidInput("app_id cannot contain backslashes"));
+    }
+
+    Ok(())
+}
+
 /// Attempts to acquire a named process-wide single-instance guard.
 ///
 /// Returns `Ok(Some(InstanceGuard))` for the first instance and `Ok(None)` if another
@@ -44,7 +62,9 @@ fn to_wide_str(value: &str) -> Vec<u16> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `app_id` is empty or whitespace only.
+/// Returns [`Error::InvalidInput`] if `app_id` is empty, contains only whitespace,
+/// contains NUL bytes, or contains backslashes. Windows reserves backslashes in
+/// named kernel objects for namespace separators such as `Local\` and `Global\`.
 /// Returns [`Error::WindowsApi`] if `CreateMutexW` fails.
 ///
 /// # Examples
@@ -57,9 +77,7 @@ fn to_wide_str(value: &str) -> Vec<u16> {
 /// ```
 #[must_use = "store the returned guard for as long as the process should be considered the active instance"]
 pub fn single_instance(app_id: &str) -> Result<Option<InstanceGuard>> {
-    if app_id.trim().is_empty() {
-        return Err(Error::InvalidInput("app_id cannot be empty"));
-    }
+    validate_app_id(app_id)?;
 
     let mutex_name = format!("Local\\win_desktop_utils_{app_id}");
     let mutex_name_w = to_wide_str(&mutex_name);
@@ -81,5 +99,41 @@ pub fn single_instance(app_id: &str) -> Result<Option<InstanceGuard>> {
         Ok(None)
     } else {
         Ok(Some(InstanceGuard { handle }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_app_id;
+
+    #[test]
+    fn validate_app_id_rejects_empty_string() {
+        let result = validate_app_id("");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("app_id cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn validate_app_id_rejects_backslashes() {
+        let result = validate_app_id(r"demo\app");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput(
+                "app_id cannot contain backslashes"
+            ))
+        ));
+    }
+
+    #[test]
+    fn validate_app_id_rejects_nul_bytes() {
+        let result = validate_app_id("demo\0app");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput(
+                "app_id cannot contain NUL bytes"
+            ))
+        ));
     }
 }
