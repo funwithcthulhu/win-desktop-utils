@@ -2,7 +2,7 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
-## Unreleased
+## 0.5.0 - 2026-05-02
 
 - Removed the hard non-Windows compile error and added non-Windows public API stubs that return `Error::Unsupported` for Windows operations.
 - Added cross-platform dependency guidance for both target-specific Windows use and cross-platform type-checking.

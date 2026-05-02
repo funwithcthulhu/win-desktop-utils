@@ -40,7 +40,7 @@ dependency:
 
 ```toml
 [target.'cfg(windows)'.dependencies]
-win-desktop-utils = "0.4"
+win-desktop-utils = "0.5"
 ```
 
 If your code wants the same public symbols available on every target, use a
@@ -48,7 +48,7 @@ normal dependency:
 
 ```toml
 [dependencies]
-win-desktop-utils = "0.4"
+win-desktop-utils = "0.5"
 ```
 
 ## Feature Flags
@@ -58,7 +58,7 @@ defaults and opt into the groups you need:
 
 ```toml
 [dependencies]
-win-desktop-utils = { version = "0.4", default-features = false, features = ["paths", "instance"] }
+win-desktop-utils = { version = "0.5", default-features = false, features = ["paths", "instance"] }
 ```
 
 Available features:

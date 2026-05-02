@@ -83,28 +83,28 @@ Small app startup helper:
 
 ```toml
 [dependencies]
-win-desktop-utils = { version = "0.4", default-features = false, features = ["app"] }
+win-desktop-utils = { version = "0.5", default-features = false, features = ["app"] }
 ```
 
 Only shell opening helpers:
 
 ```toml
 [dependencies]
-win-desktop-utils = { version = "0.4", default-features = false, features = ["shell"] }
+win-desktop-utils = { version = "0.5", default-features = false, features = ["shell"] }
 ```
 
 Cross-platform app that calls Windows helpers only from Windows-specific code:
 
 ```toml
 [target.'cfg(windows)'.dependencies]
-win-desktop-utils = "0.4"
+win-desktop-utils = "0.5"
 ```
 
 Cross-platform app that wants the public API to type-check everywhere:
 
 ```toml
 [dependencies]
-win-desktop-utils = "0.4"
+win-desktop-utils = "0.5"
 ```
 
 On non-Windows targets, Windows operations return `Error::Unsupported`.
