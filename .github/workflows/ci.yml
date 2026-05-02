@@ -48,6 +48,9 @@ jobs:
       - name: Check examples
         run: cargo check --examples
 
+      - name: Test documentation examples
+        run: cargo test --doc --all-features
+
       - name: Check feature sets
         run: |
           cargo check --no-default-features
@@ -61,6 +64,14 @@ jobs:
 
       - name: Build docs
         run: cargo doc --no-deps
+
+      - name: Install lychee
+        uses: taiki-e/install-action@v2
+        with:
+          tool: lychee
+
+      - name: Check documentation links
+        run: lychee --offline --no-progress README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md RELEASE.md ROADMAP.md CODE_OF_CONDUCT.md docs/cookbook.md docs/which-api.md docs/side-effects.md docs/compatibility.md
 
       - name: Verify package
         run: cargo package
@@ -80,3 +91,30 @@ jobs:
 
       - name: Check public API semver
         run: cargo semver-checks check-release
+
+  non-windows:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check non-Windows stubs
+        run: cargo check --all-targets --all-features
+
+      - name: Test non-Windows stubs
+        run: cargo test --lib --all-features
+
+      - name: Lint non-Windows stubs
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Check empty feature set on non-Windows
+        run: cargo check --no-default-features

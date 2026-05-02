@@ -2,6 +2,16 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## Unreleased
+
+- Removed the hard non-Windows compile error and added non-Windows public API stubs that return `Error::Unsupported` for Windows operations.
+- Added cross-platform dependency guidance for both target-specific Windows use and cross-platform type-checking.
+- Added `docs/which-api.md`, `docs/side-effects.md`, and `docs/compatibility.md`.
+- Added a cohesive `examples/desktop_app.rs` startup example.
+- Added a project roadmap and code of conduct.
+- Expanded README trust and adoption notes with license, release, and MSRV badges, scope guidance, direct `windows` crate comparison, and documentation links.
+- Expanded CI coverage with explicit doctests, non-Windows stub checks, and Markdown link checking.
+
 ## 0.4.0
 
 - Added crate feature flags so consumers can opt into focused API groups.

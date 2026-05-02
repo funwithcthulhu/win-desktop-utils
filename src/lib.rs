@@ -7,6 +7,8 @@
 //!
 //! The low-level helpers stay available as small functions, and [`DesktopApp`]
 //! provides a friendlier facade for common app startup and app-data workflows.
+//! On non-Windows targets, the public API still compiles and operational helpers
+//! return [`Error::Unsupported`].
 //!
 //! # When To Use This
 //!
@@ -42,7 +44,9 @@
 //! - [`ShortcutOptions`]
 //! - [`ShortcutIcon`]
 //!
-//! This crate supports Windows only.
+//! This crate is Windows-first. Non-Windows builds provide stubs so cross-platform
+//! applications can depend on the crate without wrapping the dependency itself in
+//! `cfg(windows)`.
 //!
 //! # Quick Start
 //!
@@ -76,6 +80,13 @@
 //! ```toml
 //! [dependencies]
 //! win-desktop-utils = { version = "0.4", default-features = false, features = ["paths", "instance"] }
+//! ```
+//!
+//! Cross-platform applications can also keep the dependency Windows-only:
+//!
+//! ```toml
+//! [target.'cfg(windows)'.dependencies]
+//! win-desktop-utils = "0.4"
 //! ```
 //!
 //! Available features:
@@ -159,14 +170,10 @@
 //! in CI with `cargo-semver-checks`, and dependency policy is checked with
 //! `cargo-deny`.
 
-#[cfg(not(windows))]
-compile_error!("win-desktop-utils supports Windows only.");
-
 #[cfg(all(windows, feature = "app"))]
 pub mod app;
 #[cfg(all(windows, feature = "elevation"))]
 pub mod elevation;
-#[cfg(windows)]
 pub mod error;
 #[cfg(all(windows, feature = "instance"))]
 pub mod instance;
@@ -176,8 +183,20 @@ pub mod paths;
 pub mod shell;
 #[cfg(all(windows, feature = "shortcuts"))]
 pub mod shortcuts;
+#[cfg(all(
+    not(windows),
+    any(
+        feature = "app",
+        feature = "elevation",
+        feature = "instance",
+        feature = "paths",
+        feature = "recycle-bin",
+        feature = "shell",
+        feature = "shortcuts",
+    )
+))]
+mod unsupported;
 
-#[cfg(windows)]
 pub use error::{Error, Result};
 
 #[cfg(all(windows, feature = "app"))]
@@ -202,3 +221,27 @@ pub use shell::{
 };
 #[cfg(all(windows, feature = "shortcuts"))]
 pub use shortcuts::{create_shortcut, create_url_shortcut, ShortcutIcon, ShortcutOptions};
+#[cfg(all(not(windows), feature = "app"))]
+pub use unsupported::DesktopApp;
+#[cfg(all(not(windows), feature = "shortcuts"))]
+pub use unsupported::{create_shortcut, create_url_shortcut, ShortcutIcon, ShortcutOptions};
+#[cfg(all(not(windows), feature = "recycle-bin"))]
+pub use unsupported::{
+    empty_recycle_bin, empty_recycle_bin_for_root, move_paths_to_recycle_bin, move_to_recycle_bin,
+};
+#[cfg(all(not(windows), feature = "paths"))]
+pub use unsupported::{
+    ensure_local_app_data, ensure_roaming_app_data, local_app_data, roaming_app_data,
+};
+#[cfg(all(not(windows), feature = "elevation"))]
+pub use unsupported::{is_elevated, restart_as_admin, run_as_admin, run_with_verb};
+#[cfg(all(not(windows), feature = "shell"))]
+pub use unsupported::{
+    open_containing_folder, open_url, open_with_default, open_with_verb, print_with_default,
+    reveal_in_explorer, show_properties,
+};
+#[cfg(all(not(windows), feature = "instance"))]
+pub use unsupported::{
+    single_instance, single_instance_with_options, single_instance_with_scope, InstanceGuard,
+    InstanceScope, SingleInstanceOptions,
+};

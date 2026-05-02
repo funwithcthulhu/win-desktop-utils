@@ -26,10 +26,22 @@ cargo fmt --all -- --check
 cargo test
 cargo clippy --all-targets --all-features -- -D warnings
 cargo check --examples
+cargo test --doc --all-features
 cargo doc --no-deps
+lychee --offline --no-progress README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md RELEASE.md ROADMAP.md CODE_OF_CONDUCT.md docs/cookbook.md docs/which-api.md docs/side-effects.md docs/compatibility.md
 cargo package
 cargo deny check
 ```
+
+If you change cross-platform behavior, also run:
+
+```powershell
+rustup target add x86_64-unknown-linux-gnu
+cargo check --target x86_64-unknown-linux-gnu --all-targets --all-features
+cargo check --target x86_64-unknown-linux-gnu --no-default-features
+```
+
+The Linux CI job runs the non-Windows unit tests natively.
 
 If you change public API, also run:
 
@@ -50,3 +62,7 @@ working on Windows.
 ## Release Notes
 
 User-visible changes should be added to `CHANGELOG.md`. Release steps live in `RELEASE.md`.
+
+## Conduct
+
+By participating, you agree to follow the project [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).

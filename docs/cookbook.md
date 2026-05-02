@@ -133,3 +133,27 @@ let local = win_desktop_utils::ensure_local_app_data("my-app")?;
 let _guard = win_desktop_utils::single_instance("my-app")?;
 # Ok::<(), win_desktop_utils::Error>(())
 ```
+
+## Use The Crate From A Cross-Platform App
+
+If only your Windows-specific module needs these helpers, make the dependency
+target-specific:
+
+```toml
+[target.'cfg(windows)'.dependencies]
+win-desktop-utils = "0.4"
+```
+
+If you want the public symbols to type-check on every target, keep a normal
+dependency and handle `Error::Unsupported` when running outside Windows:
+
+```rust
+match win_desktop_utils::open_url("https://www.rust-lang.org") {
+    Ok(()) => {}
+    Err(win_desktop_utils::Error::Unsupported(_)) => {
+        eprintln!("open_url is only available on Windows");
+    }
+    Err(err) => return Err(err),
+}
+# Ok::<(), win_desktop_utils::Error>(())
+```

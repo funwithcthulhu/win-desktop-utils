@@ -60,6 +60,18 @@ impl DesktopApp {
     /// App-data paths are nested as `Company\App`, while the default single-instance
     /// mutex ID uses `Company.App`.
     ///
+    /// # Examples
+    ///
+    /// ```
+    /// let app = win_desktop_utils::DesktopApp::with_company("Acme", "Editor")?;
+    ///
+    /// assert_eq!(app.company_name(), Some("Acme"));
+    /// assert_eq!(app.app_name(), "Editor");
+    /// assert_eq!(app.app_dir_name(), "Acme\\Editor");
+    /// assert_eq!(app.app_id(), "Acme.Editor");
+    /// # Ok::<(), win_desktop_utils::Error>(())
+    /// ```
+    ///
     /// # Errors
     ///
     /// Returns [`Error::InvalidInput`] if either identity part is empty, contains NUL
@@ -81,6 +93,19 @@ impl DesktopApp {
     }
 
     /// Sets the default single-instance mutex namespace scope used by [`Self::single_instance`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let app = win_desktop_utils::DesktopApp::new("Admin Tool")?
+    ///     .instance_scope(win_desktop_utils::InstanceScope::Global);
+    ///
+    /// assert_eq!(
+    ///     app.configured_instance_scope(),
+    ///     win_desktop_utils::InstanceScope::Global,
+    /// );
+    /// # Ok::<(), win_desktop_utils::Error>(())
+    /// ```
     pub fn instance_scope(mut self, scope: InstanceScope) -> Self {
         self.instance_scope = scope;
         self
@@ -132,6 +157,20 @@ impl DesktopApp {
     }
 
     /// Returns single-instance options for this app.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let app = win_desktop_utils::DesktopApp::with_company("Acme", "Editor")?;
+    /// let options = app.single_instance_options();
+    ///
+    /// assert_eq!(options.app_id(), "Acme.Editor");
+    /// assert_eq!(
+    ///     options.configured_scope(),
+    ///     win_desktop_utils::InstanceScope::CurrentSession,
+    /// );
+    /// # Ok::<(), win_desktop_utils::Error>(())
+    /// ```
     pub fn single_instance_options(&self) -> SingleInstanceOptions {
         SingleInstanceOptions::new(self.app_id.clone()).scope(self.instance_scope)
     }

@@ -3,6 +3,9 @@
 [![Crates.io](https://img.shields.io/crates/v/win-desktop-utils.svg)](https://crates.io/crates/win-desktop-utils)
 [![Docs.rs](https://docs.rs/win-desktop-utils/badge.svg)](https://docs.rs/win-desktop-utils)
 [![CI](https://github.com/funwithcthulhu/win-desktop-utils/actions/workflows/ci.yml/badge.svg)](https://github.com/funwithcthulhu/win-desktop-utils/actions/workflows/ci.yml)
+[![License](https://img.shields.io/crates/l/win-desktop-utils.svg)](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/LICENSE-MIT)
+[![Latest Release](https://img.shields.io/github/v/release/funwithcthulhu/win-desktop-utils)](https://github.com/funwithcthulhu/win-desktop-utils/releases)
+[![MSRV](https://img.shields.io/badge/MSRV-1.82-blue)](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/RELEASE.md)
 
 Windows desktop helpers for Rust apps.
 
@@ -30,7 +33,8 @@ This crate currently provides helpers to:
 - relaunch the current executable as administrator
 - launch arbitrary commands through shell verbs such as `open` or `runas`
 
-This crate supports Windows only.
+This crate is Windows-first. On non-Windows targets, the public API still
+compiles and operational helpers return `Error::Unsupported`.
 
 ## Installation
 
@@ -45,6 +49,17 @@ Default features enable the full API. To keep a dependency focused, disable defa
 [dependencies]
 win-desktop-utils = { version = "0.4", default-features = false, features = ["paths", "instance"] }
 ```
+
+For crates that only need these helpers in Windows-specific code, use a
+target-specific dependency:
+
+```toml
+[target.'cfg(windows)'.dependencies]
+win-desktop-utils = "0.4"
+```
+
+For cross-platform crates that want the same public symbols available everywhere,
+use a normal dependency and handle `Error::Unsupported` on non-Windows targets.
 
 ## Quick Start
 
@@ -120,6 +135,12 @@ The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blo
 - relaunching as administrator
 - moving files to the Recycle Bin
 
+Additional guides:
+
+- [`docs/which-api.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md): pick the right helper for a task
+- [`docs/side-effects.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/side-effects.md): user-visible behavior and safety notes
+- [`docs/compatibility.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md): OS, Rust, feature, and non-Windows build policy
+
 ## Examples
 
 The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/examples) directory includes runnable samples for:
@@ -134,12 +155,29 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 - single-instance enforcement
 - single-instance enforcement across all sessions
 - builder-style single-instance options
+- cohesive `DesktopApp` startup flow
 
 Run any example with:
 
 ```powershell
 cargo run --example single_instance
 ```
+
+## Why Not Use `windows` Directly?
+
+Use `windows` directly when you need broad Win32 coverage, custom flags, direct
+COM object ownership, or APIs outside this crate's scope.
+
+Use `win-desktop-utils` when you want a small, documented layer for common
+desktop app chores with validation, Rust-friendly builders, examples, and a
+stable public API.
+
+## Alternatives And Scope
+
+This crate is not a GUI framework, installer, updater, service framework, or
+cross-platform desktop abstraction. It works well alongside GUI frameworks and
+installer tools by handling a small set of Windows desktop tasks that application
+code often needs after startup or in response to user actions.
 
 ## Error behavior
 
@@ -152,6 +190,7 @@ Notable error distinctions include:
 - `Error::PathDoesNotExist` when an operation requires an existing path
 - `Error::WindowsApi { .. }` when a Win32 or shell operation reports failure
 - `Error::Io(...)` for underlying I/O failures
+- `Error::Unsupported(...)` for Windows operations called on non-Windows targets
 
 ## Behavior notes
 
@@ -175,6 +214,7 @@ Notable error distinctions include:
 - `restart_as_admin` starts a new elevated instance of the current executable and does not terminate the current process.
 - `run_as_admin` starts an arbitrary command with the `runas` shell verb and may trigger UAC.
 - `restart_as_admin`, `run_as_admin`, and `run_with_verb` reject arguments containing NUL bytes.
+- On non-Windows targets, public APIs compile and Windows operations return `Error::Unsupported`.
 
 ## Quality
 
@@ -183,7 +223,9 @@ The crate includes:
 - automated tests for validation and single-instance behavior
 - unit tests covering argument quoting and input normalization edge cases
 - doctest examples in the public modules
-- Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, docs, packaging, dependency policy, and semver checks
+- Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, doctests, docs, packaging, dependency policy, and semver checks
+- non-Windows CI checks that the public API stubs compile and return unsupported errors
+- documentation link checks for local Markdown links
 - docs published on docs.rs
 
 The minimum supported Rust version is `1.82`, matching the current `windows` crate dependency floor.
@@ -191,6 +233,7 @@ The minimum supported Rust version is `1.82`, matching the current `windows` cra
 ## Support Policy
 
 - Supported OS family: Windows 10 and Windows 11.
+- Non-Windows targets compile public API stubs that return `Error::Unsupported`.
 - Supported Rust: 1.82 and newer.
 - Public API compatibility is checked with `cargo-semver-checks`.
 - Dependency advisories, licenses, duplicate versions, and sources are checked with `cargo-deny`.
@@ -202,3 +245,6 @@ The minimum supported Rust version is `1.82`, matching the current `windows` cra
 - Repository: https://github.com/funwithcthulhu/win-desktop-utils
 - Changelog: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/CHANGELOG.md
 - Cookbook: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md
+- API guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md
+- Compatibility: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md
+- Roadmap: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/ROADMAP.md
