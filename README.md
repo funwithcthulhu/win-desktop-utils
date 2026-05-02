@@ -53,6 +53,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 - `open_url(url)`
 - `reveal_in_explorer(path)`
 - `move_to_recycle_bin(path)`
+- `move_paths_to_recycle_bin(paths)`
 - `single_instance(app_id)`
 - `single_instance_with_scope(app_id, scope)`
 - `roaming_app_data(app_name)`
@@ -100,6 +101,7 @@ Notable error distinctions include:
 - `open_url` trims surrounding whitespace before delegating to the Windows shell.
 - `reveal_in_explorer` requires an existing path and launches `explorer.exe`.
 - `move_to_recycle_bin` requires an absolute existing path and uses `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
+- `move_paths_to_recycle_bin` validates every path before starting one recycle-bin shell operation.
 - `roaming_app_data` and `local_app_data` resolve the base directory via `SHGetKnownFolderPath`.
 - `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
 - `single_instance_with_scope` can opt into either the current-session (`Local\...`) or global (`Global\...`) namespace.

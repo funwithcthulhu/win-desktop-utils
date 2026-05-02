@@ -122,7 +122,54 @@ fn shell_item_from_path(path: &Path) -> Result<IShellItem> {
     })
 }
 
-fn recycle_path_in_sta(path: &Path) -> Result<()> {
+fn validate_recycle_path(path: &Path) -> Result<()> {
+    if path.as_os_str().is_empty() {
+        return Err(Error::InvalidInput("path cannot be empty"));
+    }
+
+    if !path.is_absolute() {
+        return Err(Error::PathNotAbsolute);
+    }
+
+    if !path.exists() {
+        return Err(Error::PathDoesNotExist);
+    }
+
+    Ok(())
+}
+
+fn collect_recycle_paths<I, P>(paths: I) -> Result<Vec<PathBuf>>
+where
+    I: IntoIterator<Item = P>,
+    P: AsRef<Path>,
+{
+    let mut collected = Vec::new();
+
+    for path in paths {
+        let path = path.as_ref();
+        validate_recycle_path(path)?;
+        collected.push(PathBuf::from(path));
+    }
+
+    if collected.is_empty() {
+        Err(Error::InvalidInput("paths cannot be empty"))
+    } else {
+        Ok(collected)
+    }
+}
+
+fn queue_recycle_item(operation: &IFileOperation, path: &Path) -> Result<()> {
+    let item = shell_item_from_path(path)?;
+
+    unsafe { operation.DeleteItem(&item, Option::<&IFileOperationProgressSink>::None) }.map_err(
+        |err| Error::WindowsApi {
+            context: "IFileOperation::DeleteItem",
+            code: err.code().0,
+        },
+    )
+}
+
+fn recycle_paths_in_sta(paths: &[PathBuf]) -> Result<()> {
     let _com = ComApartment::initialize_sta()?;
     let operation: IFileOperation = unsafe {
         CoCreateInstance(&FileOperation, None, CLSCTX_INPROC_SERVER)
@@ -140,14 +187,9 @@ fn recycle_path_in_sta(path: &Path) -> Result<()> {
         code: err.code().0,
     })?;
 
-    let item = shell_item_from_path(path)?;
-
-    unsafe { operation.DeleteItem(&item, Option::<&IFileOperationProgressSink>::None) }.map_err(
-        |err| Error::WindowsApi {
-            context: "IFileOperation::DeleteItem",
-            code: err.code().0,
-        },
-    )?;
+    for path in paths {
+        queue_recycle_item(&operation, path)?;
+    }
 
     unsafe { operation.PerformOperations() }.map_err(|err| Error::WindowsApi {
         context: "IFileOperation::PerformOperations",
@@ -312,26 +354,50 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
 /// ```
 pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
-
-    if path.as_os_str().is_empty() {
-        return Err(Error::InvalidInput("path cannot be empty"));
-    }
-
-    if !path.is_absolute() {
-        return Err(Error::PathNotAbsolute);
-    }
-
-    if !path.exists() {
-        return Err(Error::PathDoesNotExist);
-    }
+    validate_recycle_path(path)?;
 
     let path = PathBuf::from(path);
-    run_in_shell_sta(move || recycle_path_in_sta(&path))
+    run_in_shell_sta(move || recycle_paths_in_sta(std::slice::from_ref(&path)))
+}
+
+/// Sends multiple files or directories to the Windows Recycle Bin in one shell operation.
+///
+/// Every path must be absolute and must exist. All paths are validated before any shell
+/// operation is started.
+///
+/// This function uses `IFileOperation` on a dedicated STA thread so it can request
+/// recycle-bin behavior through the modern Shell API.
+///
+/// # Errors
+///
+/// Returns [`Error::InvalidInput`] if the path collection is empty or any path is empty.
+/// Returns [`Error::PathNotAbsolute`] if any path is not absolute.
+/// Returns [`Error::PathDoesNotExist`] if any path does not exist.
+/// Returns [`Error::WindowsApi`] if the shell operation fails or is aborted.
+///
+/// # Examples
+///
+/// ```no_run
+/// let first = std::env::current_dir()?.join("temporary-file-a.txt");
+/// let second = std::env::current_dir()?.join("temporary-file-b.txt");
+/// std::fs::write(&first, "temporary file")?;
+/// std::fs::write(&second, "temporary file")?;
+/// win_desktop_utils::move_paths_to_recycle_bin([&first, &second])?;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+pub fn move_paths_to_recycle_bin<I, P>(paths: I) -> Result<()>
+where
+    I: IntoIterator<Item = P>,
+    P: AsRef<Path>,
+{
+    let paths = collect_recycle_paths(paths)?;
+    run_in_shell_sta(move || recycle_paths_in_sta(&paths))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{normalize_shell_verb, normalize_url};
+    use super::{collect_recycle_paths, normalize_shell_verb, normalize_url};
+    use std::path::PathBuf;
 
     #[test]
     fn normalize_url_rejects_empty_string() {
@@ -400,6 +466,16 @@ mod tests {
         assert!(matches!(
             result,
             Err(crate::Error::InvalidInput("verb cannot contain NUL bytes"))
+        ));
+    }
+
+    #[test]
+    fn collect_recycle_paths_rejects_empty_collection() {
+        let paths: [PathBuf; 0] = [];
+        let result = collect_recycle_paths(paths);
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("paths cannot be empty"))
         ));
     }
 }

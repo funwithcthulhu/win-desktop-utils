@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use win_desktop_utils::{
-    move_to_recycle_bin, open_url, open_with_default, open_with_verb, reveal_in_explorer,
-    single_instance, single_instance_with_scope, Error, InstanceScope,
+    move_paths_to_recycle_bin, move_to_recycle_bin, open_url, open_with_default, open_with_verb,
+    reveal_in_explorer, single_instance, single_instance_with_scope, Error, InstanceScope,
 };
 
 #[test]
@@ -91,6 +91,32 @@ fn move_to_recycle_bin_rejects_relative_path() {
 fn move_to_recycle_bin_rejects_missing_absolute_path() {
     let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-file.tmp");
     let result = move_to_recycle_bin(path);
+    assert!(matches!(result, Err(Error::PathDoesNotExist)));
+}
+
+#[test]
+fn move_paths_to_recycle_bin_rejects_empty_collection() {
+    let paths: [PathBuf; 0] = [];
+    let result = move_paths_to_recycle_bin(paths);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn move_paths_to_recycle_bin_rejects_empty_path() {
+    let result = move_paths_to_recycle_bin([PathBuf::new()]);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn move_paths_to_recycle_bin_rejects_relative_path() {
+    let result = move_paths_to_recycle_bin([PathBuf::from("relative-file.txt")]);
+    assert!(matches!(result, Err(Error::PathNotAbsolute)));
+}
+
+#[test]
+fn move_paths_to_recycle_bin_rejects_missing_absolute_path() {
+    let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-file-batch.tmp");
+    let result = move_paths_to_recycle_bin([path]);
     assert!(matches!(result, Err(Error::PathDoesNotExist)));
 }
 
