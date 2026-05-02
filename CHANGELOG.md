@@ -2,7 +2,7 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
-## Unreleased
+## 0.5.1 - 2026-05-02
 
 - Added a design contract that documents project scope, API acceptance rules, side-effect rules, and release expectations.
 - Added adoption notes for common app shapes without expanding the public API.
