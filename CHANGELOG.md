@@ -2,7 +2,7 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
-## Unreleased
+## 0.4.0
 
 - Added crate feature flags so consumers can opt into focused API groups.
 - Added `DesktopApp` as a convenience facade for app-data and single-instance startup workflows.

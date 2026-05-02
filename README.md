@@ -36,14 +36,14 @@ This crate supports Windows only.
 
 ```toml
 [dependencies]
-win-desktop-utils = "0.3"
+win-desktop-utils = "0.4"
 ```
 
 Default features enable the full API. To keep a dependency focused, disable defaults and opt into only the modules you need:
 
 ```toml
 [dependencies]
-win-desktop-utils = { version = "0.3", default-features = false, features = ["paths", "instance"] }
+win-desktop-utils = { version = "0.4", default-features = false, features = ["paths", "instance"] }
 ```
 
 ## Quick Start

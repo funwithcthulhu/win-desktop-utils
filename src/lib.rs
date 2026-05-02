@@ -75,7 +75,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! win-desktop-utils = { version = "0.3", default-features = false, features = ["paths", "instance"] }
+//! win-desktop-utils = { version = "0.4", default-features = false, features = ["paths", "instance"] }
 //! ```
 //!
 //! Available features:

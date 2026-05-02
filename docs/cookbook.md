@@ -125,7 +125,7 @@ win_desktop_utils::move_paths_to_recycle_bin([&first, &second])?;
 
 ```toml
 [dependencies]
-win-desktop-utils = { version = "0.3", default-features = false, features = ["paths", "instance"] }
+win-desktop-utils = { version = "0.4", default-features = false, features = ["paths", "instance"] }
 ```
 
 ```rust
