@@ -20,8 +20,38 @@ fn to_wide_str(value: &str) -> Vec<u16> {
 }
 
 fn quote_arg(arg: &OsStr) -> String {
-    let text = arg.to_string_lossy().replace('"', "\\\"");
-    format!("\"{text}\"")
+    let text = arg.to_string_lossy();
+    let mut quoted = String::with_capacity(text.len() + 2);
+    let mut trailing_backslashes = 0usize;
+
+    quoted.push('"');
+
+    for ch in text.chars() {
+        match ch {
+            '\\' => trailing_backslashes += 1,
+            '"' => {
+                for _ in 0..(trailing_backslashes * 2 + 1) {
+                    quoted.push('\\');
+                }
+                quoted.push('"');
+                trailing_backslashes = 0;
+            }
+            _ => {
+                for _ in 0..trailing_backslashes {
+                    quoted.push('\\');
+                }
+                quoted.push(ch);
+                trailing_backslashes = 0;
+            }
+        }
+    }
+
+    for _ in 0..(trailing_backslashes * 2) {
+        quoted.push('\\');
+    }
+    quoted.push('"');
+
+    quoted
 }
 
 fn join_args_for_shell_execute(args: &[OsString]) -> String {
@@ -53,7 +83,8 @@ pub fn is_elevated() -> Result<bool> {
 /// Relaunches the current executable with elevation using the Windows `runas` shell verb.
 ///
 /// Arguments are passed as [`OsString`] values so Windows-native argument text is preserved
-/// as well as possible before being joined for `ShellExecuteW`.
+/// as well as possible before being joined for `ShellExecuteW` using standard Windows
+/// command-line quoting rules.
 ///
 /// This function starts a new elevated instance of the current executable. It does not
 /// terminate the current process.
@@ -126,5 +157,14 @@ mod tests {
     fn join_args_escapes_inner_quotes() {
         let args = [OsString::from("say \"hi\"")];
         assert_eq!(join_args_for_shell_execute(&args), "\"say \\\"hi\\\"\"");
+    }
+
+    #[test]
+    fn join_args_doubles_trailing_backslashes_inside_quotes() {
+        let args = [OsString::from(r"C:\Program Files\demo\")];
+        assert_eq!(
+            join_args_for_shell_execute(&args),
+            r#""C:\Program Files\demo\\""#
+        );
     }
 }
