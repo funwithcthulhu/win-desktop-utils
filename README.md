@@ -117,7 +117,7 @@ The crate includes:
 - automated tests for validation and single-instance behavior
 - unit tests covering argument quoting and input normalization edge cases
 - doctest examples in the public modules
-- Windows CI via GitHub Actions
+- Windows CI via GitHub Actions for formatting, tests, clippy, examples, docs, and packaging
 - docs published on docs.rs
 
 ## Links
@@ -125,3 +125,4 @@ The crate includes:
 - Crates.io: https://crates.io/crates/win-desktop-utils
 - Docs: https://docs.rs/win-desktop-utils
 - Repository: https://github.com/funwithcthulhu/win-desktop-utils
+- Changelog: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/CHANGELOG.md
