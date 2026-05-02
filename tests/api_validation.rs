@@ -31,6 +31,12 @@ fn open_url_rejects_whitespace_only() {
 }
 
 #[test]
+fn open_url_rejects_nul_bytes() {
+    let result = open_url("https://example.com/\0hidden");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
 fn reveal_in_explorer_rejects_empty_path() {
     let result = reveal_in_explorer(PathBuf::new());
     assert!(matches!(result, Err(Error::InvalidInput(_))));
@@ -65,6 +71,18 @@ fn move_to_recycle_bin_rejects_missing_absolute_path() {
 #[test]
 fn single_instance_rejects_empty_app_id() {
     let result = single_instance("");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn single_instance_rejects_backslashes_in_app_id() {
+    let result = single_instance(r"demo\app");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn single_instance_rejects_nul_bytes_in_app_id() {
+    let result = single_instance("demo\0app");
     assert!(matches!(result, Err(Error::InvalidInput(_))));
 }
 

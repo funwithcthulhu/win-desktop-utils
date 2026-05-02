@@ -27,21 +27,7 @@ This crate supports Windows only.
 win-desktop-utils = "0.2"
 ```
 
-## Current API
-
-- `open_with_default(path)`
-- `open_url(url)`
-- `reveal_in_explorer(path)`
-- `move_to_recycle_bin(path)`
-- `single_instance(app_id)`
-- `roaming_app_data(app_name)`
-- `local_app_data(app_name)`
-- `ensure_roaming_app_data(app_name)`
-- `ensure_local_app_data(app_name)`
-- `is_elevated()`
-- `restart_as_admin(args)`
-
-## Example
+## Quick Start
 
 ```rust
 fn main() -> Result<(), win_desktop_utils::Error> {
@@ -60,6 +46,36 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 }
 ```
 
+## Current API
+
+- `open_with_default(path)`
+- `open_url(url)`
+- `reveal_in_explorer(path)`
+- `move_to_recycle_bin(path)`
+- `single_instance(app_id)`
+- `roaming_app_data(app_name)`
+- `local_app_data(app_name)`
+- `ensure_roaming_app_data(app_name)`
+- `ensure_local_app_data(app_name)`
+- `is_elevated()`
+- `restart_as_admin(args)`
+
+## Examples
+
+The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/examples) directory includes runnable samples for:
+
+- app-data path lookup and creation
+- URL opening and Explorer reveal helpers
+- Recycle Bin integration
+- elevation checks and relaunch
+- single-instance enforcement
+
+Run any example with:
+
+```powershell
+cargo run --example single_instance
+```
+
 ## Error behavior
 
 The crate exposes a small public error type with explicit path-related cases.
@@ -75,26 +91,25 @@ Notable error distinctions include:
 ## Behavior notes
 
 - `open_with_default` requires a non-empty existing path.
-- `open_url` only checks that the URL string is non-empty after trimming; deeper URL validation is delegated to the Windows shell.
+- `open_url` trims surrounding whitespace before delegating to the Windows shell.
 - `reveal_in_explorer` requires an existing path and launches `explorer.exe`.
 - `move_to_recycle_bin` requires an absolute existing path and uses `SHFileOperationW` with undo enabled.
 - `roaming_app_data` and `local_app_data` resolve the base directory via `SHGetKnownFolderPath`.
 - `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
+- `single_instance` rejects backslashes in `app_id` because Windows reserves them for kernel-object namespaces such as `Local\` and `Global\`.
 - Keep the returned `InstanceGuard` alive for as long as the process should own the single-instance lock.
 - `restart_as_admin` starts a new elevated instance of the current executable and does not terminate the current process.
+- `restart_as_admin` rejects arguments containing NUL bytes.
 
 ## Quality
 
 The crate includes:
 
 - automated tests for validation and single-instance behavior
+- unit tests covering argument quoting and input normalization edge cases
 - doctest examples in the public modules
 - Windows CI via GitHub Actions
 - docs published on docs.rs
-
-## Status
-
-Early-stage crate, but tested and usable.
 
 ## Links
 
