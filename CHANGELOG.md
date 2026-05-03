@@ -2,7 +2,7 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
-## Unreleased
+## 0.5.3 - 2026-05-03
 
 - Expanded feature checking to cover every pairwise public feature combination.
 - Added more table-driven validation and argument quoting tests.
