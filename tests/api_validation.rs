@@ -9,9 +9,19 @@ use win_desktop_utils::{
     single_instance_with_scope, Error, InstanceScope, ShortcutOptions, SingleInstanceOptions,
 };
 
+fn path_with_nul() -> PathBuf {
+    PathBuf::from("C:\\win-desktop-utils-test\\bad\0path")
+}
+
 #[test]
 fn open_with_default_rejects_empty_path() {
     let result = open_with_default(PathBuf::new());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn open_with_default_rejects_nul_bytes_in_path() {
+    let result = open_with_default(path_with_nul());
     assert!(matches!(result, Err(Error::InvalidInput(_))));
 }
 
@@ -41,6 +51,12 @@ fn open_with_verb_rejects_empty_path() {
 }
 
 #[test]
+fn open_with_verb_rejects_nul_bytes_in_path() {
+    let result = open_with_verb("open", path_with_nul());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
 fn open_with_verb_rejects_missing_path() {
     let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-open-verb.tmp");
     let result = open_with_verb("open", path);
@@ -50,6 +66,18 @@ fn open_with_verb_rejects_missing_path() {
 #[test]
 fn open_containing_folder_rejects_empty_path() {
     let result = open_containing_folder(PathBuf::new());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn open_containing_folder_rejects_nul_bytes_in_path() {
+    let result = open_containing_folder(path_with_nul());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn open_containing_folder_rejects_drive_root_without_parent() {
+    let result = open_containing_folder(r"C:\");
     assert!(matches!(result, Err(Error::InvalidInput(_))));
 }
 
@@ -85,6 +113,12 @@ fn reveal_in_explorer_rejects_empty_path() {
 }
 
 #[test]
+fn reveal_in_explorer_rejects_nul_bytes_in_path() {
+    let result = reveal_in_explorer(path_with_nul());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
 fn reveal_in_explorer_rejects_missing_path() {
     let path = PathBuf::from(r"C:\definitely-does-not-exist-win-desktop-utils-test-reveal.tmp");
     let result = reveal_in_explorer(path);
@@ -94,6 +128,12 @@ fn reveal_in_explorer_rejects_missing_path() {
 #[test]
 fn move_to_recycle_bin_rejects_empty_path() {
     let result = move_to_recycle_bin(PathBuf::new());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn move_to_recycle_bin_rejects_nul_bytes_in_path() {
+    let result = move_to_recycle_bin(path_with_nul());
     assert!(matches!(result, Err(Error::InvalidInput(_))));
 }
 
@@ -124,6 +164,12 @@ fn move_paths_to_recycle_bin_rejects_empty_path() {
 }
 
 #[test]
+fn move_paths_to_recycle_bin_rejects_nul_bytes_in_path() {
+    let result = move_paths_to_recycle_bin([path_with_nul()]);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
 fn move_paths_to_recycle_bin_rejects_relative_path() {
     let result = move_paths_to_recycle_bin([PathBuf::from("relative-file.txt")]);
     assert!(matches!(result, Err(Error::PathNotAbsolute)));
@@ -139,6 +185,12 @@ fn move_paths_to_recycle_bin_rejects_missing_absolute_path() {
 #[test]
 fn empty_recycle_bin_for_root_rejects_empty_path() {
     let result = empty_recycle_bin_for_root(PathBuf::new());
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn empty_recycle_bin_for_root_rejects_nul_bytes_in_path() {
+    let result = empty_recycle_bin_for_root(path_with_nul());
     assert!(matches!(result, Err(Error::InvalidInput(_))));
 }
 
@@ -184,6 +236,17 @@ fn create_shortcut_rejects_empty_shortcut_path() {
 }
 
 #[test]
+fn create_shortcut_rejects_nul_bytes_in_shortcut_path() {
+    let options = ShortcutOptions::new();
+    let result = create_shortcut(
+        path_with_nul().with_extension("lnk"),
+        r"C:\Windows\notepad.exe",
+        &options,
+    );
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
 fn create_shortcut_rejects_relative_shortcut_path() {
     let options = ShortcutOptions::new();
     let result = create_shortcut("demo.lnk", r"C:\Windows\notepad.exe", &options);
@@ -204,6 +267,34 @@ fn create_shortcut_rejects_relative_target_path() {
     let path = std::env::temp_dir().join("win-desktop-utils-shortcut-test.lnk");
     let result = create_shortcut(path, "relative-target.exe", &options);
     assert!(matches!(result, Err(Error::PathNotAbsolute)));
+}
+
+#[test]
+fn create_shortcut_rejects_nul_bytes_in_target_path() {
+    let options = ShortcutOptions::new();
+    let path = std::env::temp_dir().join("win-desktop-utils-shortcut-test.lnk");
+    let result = create_shortcut(path, path_with_nul(), &options);
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn create_shortcut_rejects_output_parent_that_is_file() {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let parent_file = std::env::temp_dir().join(format!(
+        "win-desktop-utils-shortcut-parent-file-{}-{unique}.tmp",
+        std::process::id()
+    ));
+    std::fs::write(&parent_file, "not a directory").unwrap();
+    let shortcut = parent_file.join("child.lnk");
+    let options = ShortcutOptions::new();
+
+    let result = create_shortcut(shortcut, r"C:\Windows\notepad.exe", &options);
+
+    std::fs::remove_file(parent_file).unwrap();
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
 }
 
 #[test]
@@ -239,9 +330,42 @@ fn create_url_shortcut_rejects_wrong_extension() {
 }
 
 #[test]
+fn create_url_shortcut_rejects_empty_url() {
+    let path = std::env::temp_dir().join("win-desktop-utils-url-shortcut-test.url");
+    let result = create_url_shortcut(path, "   ");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn create_url_shortcut_rejects_nul_bytes_in_url() {
+    let path = std::env::temp_dir().join("win-desktop-utils-url-shortcut-test.url");
+    let result = create_url_shortcut(path, "https://example.com/\0hidden");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
 fn create_url_shortcut_rejects_line_breaks() {
     let path = std::env::temp_dir().join("win-desktop-utils-url-shortcut-test.url");
     let result = create_url_shortcut(path, "https://example.com/\nIconFile=bad.ico");
+    assert!(matches!(result, Err(Error::InvalidInput(_))));
+}
+
+#[test]
+fn create_url_shortcut_rejects_output_parent_that_is_file() {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let parent_file = std::env::temp_dir().join(format!(
+        "win-desktop-utils-url-parent-file-{}-{unique}.tmp",
+        std::process::id()
+    ));
+    std::fs::write(&parent_file, "not a directory").unwrap();
+    let shortcut = parent_file.join("child.url");
+
+    let result = create_url_shortcut(shortcut, "https://example.com");
+
+    std::fs::remove_file(parent_file).unwrap();
     assert!(matches!(result, Err(Error::InvalidInput(_))));
 }
 

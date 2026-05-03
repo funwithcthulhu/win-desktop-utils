@@ -117,8 +117,8 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 | Current-session or global single-instance behavior | `single_instance` / `SingleInstanceOptions` | `instance` | Keep the guard alive |
 | Open files, URLs, folders, Properties, or print verbs | `open_with_default`, `open_url`, `open_with_verb` | `shell` | Uses user shell associations |
 | Show a file or folder in Explorer | `reveal_in_explorer` | `shell` | Starts `explorer.exe` |
-| Move files or folders to the Recycle Bin | `move_to_recycle_bin` / `move_paths_to_recycle_bin` | `recycle-bin` | Requires absolute existing paths |
-| Create `.lnk` or `.url` shortcuts | `create_shortcut` / `create_url_shortcut` | `shortcuts` | Output parent must already exist |
+| Move files or folders to the Recycle Bin | `move_to_recycle_bin` / `move_paths_to_recycle_bin` | `recycle-bin` | Requires absolute existing paths without NUL bytes |
+| Create `.lnk` or `.url` shortcuts | `create_shortcut` / `create_url_shortcut` | `shortcuts` | Output parent must already be a directory |
 | Check or request administrator elevation | `is_elevated`, `restart_as_admin`, `run_as_admin` | `elevation` | May show UAC and starts another process |
 
 ## Feature Flags
@@ -247,17 +247,17 @@ Notable error distinctions include:
 
 ## Behavior notes
 
-- `open_with_default` requires a non-empty existing path.
-- `open_with_verb` requires a non-empty existing path and a non-empty shell verb such as `open` or `properties`.
+- `open_with_default` requires a non-empty existing path without NUL bytes.
+- `open_with_verb` requires a non-empty existing path without NUL bytes and a non-empty shell verb such as `open` or `properties`.
 - `show_properties` and `print_with_default` are convenience wrappers over shell verbs.
 - `open_url` trims surrounding whitespace before delegating to the Windows shell.
-- `reveal_in_explorer` requires an existing path and launches `explorer.exe`.
-- `open_containing_folder` requires an existing path and opens its parent directory.
-- `move_to_recycle_bin` requires an absolute existing path and uses `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
+- `reveal_in_explorer` requires an existing path without NUL bytes and launches `explorer.exe`.
+- `open_containing_folder` requires an existing path without NUL bytes and opens its parent directory.
+- `move_to_recycle_bin` requires an absolute existing path without NUL bytes and uses `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
 - `move_paths_to_recycle_bin` validates every path before starting one recycle-bin shell operation.
 - `empty_recycle_bin` and `empty_recycle_bin_for_root` permanently empty Recycle Bin contents without showing shell UI.
-- `create_shortcut` requires an absolute `.lnk` path, an existing output parent directory, and an existing absolute target path.
-- `create_url_shortcut` requires an absolute `.url` path and rejects line breaks in URLs to avoid malformed shortcut files.
+- `create_shortcut` requires an absolute `.lnk` path, an existing output parent directory, and an existing absolute target path without NUL bytes.
+- `create_url_shortcut` requires an absolute `.url` path whose parent is an existing directory and rejects line breaks in URLs to avoid malformed shortcut files.
 - `roaming_app_data` and `local_app_data` resolve the base directory via `SHGetKnownFolderPath`.
 - `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
 - `single_instance_with_scope` can opt into either the current-session (`Local\...`) or global (`Global\...`) namespace.

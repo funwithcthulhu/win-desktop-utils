@@ -161,6 +161,12 @@ fn validate_output_path(path: &Path, extension: &str, label: &'static str) -> Re
         return Err(Error::PathDoesNotExist);
     }
 
+    if !parent.is_dir() {
+        return Err(Error::InvalidInput(
+            "shortcut path parent must be a directory",
+        ));
+    }
+
     Ok(())
 }
 

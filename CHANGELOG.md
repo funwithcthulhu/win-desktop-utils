@@ -2,6 +2,11 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## Unreleased
+
+- Added QA coverage for embedded-NUL path inputs across shell and Recycle Bin helpers.
+- Tightened shortcut output validation so the output parent must be an actual directory, not just an existing path.
+
 ## 0.5.4 - 2026-05-03
 
 - Sharpened README positioning and made trust signals more visible.

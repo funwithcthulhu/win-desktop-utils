@@ -4,7 +4,7 @@ use std::ffi::OsStr;
 #[cfg(any(feature = "elevation", feature = "shortcuts"))]
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStrExt;
-#[cfg(feature = "shortcuts")]
+#[cfg(any(feature = "recycle-bin", feature = "shell", feature = "shortcuts"))]
 use std::path::Path;
 #[cfg(any(feature = "recycle-bin", feature = "shortcuts"))]
 use std::thread;
@@ -79,12 +79,17 @@ pub(crate) fn to_wide_str(value: &str) -> Vec<u16> {
         .collect()
 }
 
-#[cfg(any(feature = "elevation", feature = "shortcuts"))]
+#[cfg(any(
+    feature = "elevation",
+    feature = "recycle-bin",
+    feature = "shell",
+    feature = "shortcuts"
+))]
 pub(crate) fn os_str_contains_nul(value: &OsStr) -> bool {
     value.encode_wide().any(|unit| unit == 0)
 }
 
-#[cfg(feature = "shortcuts")]
+#[cfg(any(feature = "recycle-bin", feature = "shell", feature = "shortcuts"))]
 pub(crate) fn path_contains_nul(path: &Path) -> bool {
     os_str_contains_nul(path.as_os_str())
 }
@@ -210,6 +215,13 @@ mod tests {
         feature = "shell",
         feature = "shortcuts"
     ))]
+    use super::os_str_contains_nul;
+    #[cfg(any(
+        feature = "elevation",
+        feature = "recycle-bin",
+        feature = "shell",
+        feature = "shortcuts"
+    ))]
     use super::to_wide_os;
     #[cfg(any(
         feature = "elevation",
@@ -219,7 +231,12 @@ mod tests {
     ))]
     use super::to_wide_str;
     #[cfg(any(feature = "elevation", feature = "shortcuts"))]
-    use super::{join_quoted_args, os_str_contains_nul, quote_arg};
+    use super::{join_quoted_args, quote_arg};
+    #[cfg(all(
+        not(any(feature = "elevation", feature = "shortcuts")),
+        any(feature = "recycle-bin", feature = "shell")
+    ))]
+    use std::ffi::OsStr;
     #[cfg(any(feature = "elevation", feature = "shortcuts"))]
     use std::ffi::{OsStr, OsString};
 

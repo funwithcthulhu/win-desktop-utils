@@ -21,6 +21,8 @@ use windows::Win32::UI::Shell::{
 };
 
 use crate::error::{Error, Result};
+#[cfg(any(feature = "recycle-bin", feature = "shell"))]
+use crate::win::path_contains_nul;
 #[cfg(feature = "shell")]
 use crate::win::{normalize_nonempty_str, shell_execute};
 #[cfg(feature = "recycle-bin")]
@@ -61,6 +63,10 @@ fn shell_item_from_path(path: &Path) -> Result<IShellItem> {
 fn validate_recycle_path(path: &Path) -> Result<()> {
     if path.as_os_str().is_empty() {
         return Err(Error::InvalidInput("path cannot be empty"));
+    }
+
+    if path_contains_nul(path) {
+        return Err(Error::InvalidInput("path cannot contain NUL bytes"));
     }
 
     if !path.is_absolute() {
@@ -178,7 +184,7 @@ where
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `target` is empty.
+/// Returns [`Error::InvalidInput`] if `target` is empty or contains NUL bytes.
 /// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 ///
@@ -201,7 +207,7 @@ pub fn open_with_default(target: impl AsRef<Path>) -> Result<()> {
 /// # Errors
 ///
 /// Returns [`Error::InvalidInput`] if `verb` is empty, whitespace only, or contains
-/// NUL bytes, or if `target` is empty.
+/// NUL bytes, or if `target` is empty or contains NUL bytes.
 /// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 ///
@@ -220,6 +226,10 @@ pub fn open_with_verb(verb: &str, target: impl AsRef<Path>) -> Result<()> {
         return Err(Error::InvalidInput("target cannot be empty"));
     }
 
+    if path_contains_nul(path) {
+        return Err(Error::InvalidInput("target cannot contain NUL bytes"));
+    }
+
     if !path.exists() {
         return Err(Error::PathDoesNotExist);
     }
@@ -234,7 +244,7 @@ pub fn open_with_verb(verb: &str, target: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `target` is empty.
+/// Returns [`Error::InvalidInput`] if `target` is empty or contains NUL bytes.
 /// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 ///
@@ -256,7 +266,7 @@ pub fn show_properties(target: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `target` is empty.
+/// Returns [`Error::InvalidInput`] if `target` is empty or contains NUL bytes.
 /// Returns [`Error::PathDoesNotExist`] if the target path does not exist.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 ///
@@ -299,7 +309,7 @@ pub fn open_url(url: &str) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `path` is empty.
+/// Returns [`Error::InvalidInput`] if `path` is empty or contains NUL bytes.
 /// Returns [`Error::PathDoesNotExist`] if the path does not exist.
 /// Returns [`Error::Io`] if spawning `explorer.exe` fails.
 ///
@@ -315,6 +325,10 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
 
     if path.as_os_str().is_empty() {
         return Err(Error::InvalidInput("path cannot be empty"));
+    }
+
+    if path_contains_nul(path) {
+        return Err(Error::InvalidInput("path cannot contain NUL bytes"));
     }
 
     if !path.exists() {
@@ -333,7 +347,8 @@ pub fn reveal_in_explorer(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `path` is empty or has no containing directory.
+/// Returns [`Error::InvalidInput`] if `path` is empty, contains NUL bytes, or has
+/// no containing directory.
 /// Returns [`Error::PathDoesNotExist`] if the path does not exist.
 /// Returns [`Error::WindowsApi`] if `ShellExecuteW` reports failure.
 ///
@@ -349,6 +364,10 @@ pub fn open_containing_folder(path: impl AsRef<Path>) -> Result<()> {
 
     if path.as_os_str().is_empty() {
         return Err(Error::InvalidInput("path cannot be empty"));
+    }
+
+    if path_contains_nul(path) {
+        return Err(Error::InvalidInput("path cannot contain NUL bytes"));
     }
 
     if !path.exists() {
@@ -377,7 +396,7 @@ pub fn open_containing_folder(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `path` is empty.
+/// Returns [`Error::InvalidInput`] if `path` is empty or contains NUL bytes.
 /// Returns [`Error::PathNotAbsolute`] if the path is not absolute.
 /// Returns [`Error::PathDoesNotExist`] if the path does not exist.
 /// Returns [`Error::WindowsApi`] if the shell operation fails or is aborted.
@@ -409,7 +428,8 @@ pub fn move_to_recycle_bin(path: impl AsRef<Path>) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if the path collection is empty or any path is empty.
+/// Returns [`Error::InvalidInput`] if the path collection is empty or any path is
+/// empty or contains NUL bytes.
 /// Returns [`Error::PathNotAbsolute`] if any path is not absolute.
 /// Returns [`Error::PathDoesNotExist`] if any path does not exist.
 /// Returns [`Error::WindowsApi`] if the shell operation fails or is aborted.
@@ -459,7 +479,7 @@ pub fn empty_recycle_bin() -> Result<()> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `root_path` is empty.
+/// Returns [`Error::InvalidInput`] if `root_path` is empty or contains NUL bytes.
 /// Returns [`Error::PathNotAbsolute`] if `root_path` is not absolute.
 /// Returns [`Error::PathDoesNotExist`] if `root_path` does not exist.
 /// Returns [`Error::WindowsApi`] if `SHEmptyRecycleBinW` reports failure.
@@ -476,6 +496,10 @@ pub fn empty_recycle_bin_for_root(root_path: impl AsRef<Path>) -> Result<()> {
 
     if root_path.as_os_str().is_empty() {
         return Err(Error::InvalidInput("root_path cannot be empty"));
+    }
+
+    if path_contains_nul(root_path) {
+        return Err(Error::InvalidInput("root_path cannot contain NUL bytes"));
     }
 
     if !root_path.is_absolute() {

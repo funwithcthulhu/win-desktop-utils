@@ -38,7 +38,7 @@ exit after a successful relaunch request, do that explicitly in your own code.
 Recycle Bin helpers use the Windows shell to request recycle-bin behavior.
 
 - `move_to_recycle_bin` and `move_paths_to_recycle_bin` require absolute,
-  existing paths.
+  existing paths without NUL bytes.
 - `move_paths_to_recycle_bin` validates all paths before starting the shell
   operation.
 - `empty_recycle_bin` and `empty_recycle_bin_for_root` permanently empty Recycle
@@ -53,9 +53,10 @@ user confirmation in application code before calling an emptying helper.
 requested output path.
 
 - `.lnk` shortcut creation requires an absolute `.lnk` path, an existing parent
-  directory, and an existing absolute target path.
-- `.url` shortcut creation requires an absolute `.url` path and rejects line
-  breaks in the URL to avoid malformed shortcut content.
+  directory, and an existing absolute target path without NUL bytes.
+- `.url` shortcut creation requires an absolute `.url` path whose parent is an
+  existing directory and rejects line breaks in the URL to avoid malformed
+  shortcut content.
 - Shortcut arguments are stored in the shortcut file; avoid putting secrets in
   them.
 
