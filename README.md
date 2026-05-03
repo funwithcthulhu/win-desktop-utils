@@ -151,7 +151,9 @@ The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blo
 Additional guides:
 
 - [`docs/adoption.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md): integration notes for common app shapes
+- [`docs/feature-flags.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md): minimal dependency snippets by feature
 - [`docs/integrations.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md): framework and packaging integration sketches
+- [`docs/overhead.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md): runtime model, side costs, and dependency surface
 - [`docs/which-api.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md): pick the right helper for a task
 - [`docs/side-effects.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/side-effects.md): user-visible behavior and safety notes
 - [`docs/compatibility.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md): OS, Rust, feature, and non-Windows build policy
@@ -174,6 +176,8 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 - single-instance enforcement across all sessions
 - builder-style single-instance options
 - cohesive `DesktopApp` startup flow
+
+See [`examples/README.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/examples/README.md) for expected behavior, side effects, and feature flags for each example.
 
 Run any example with:
 
@@ -240,12 +244,13 @@ The crate includes:
 
 - automated tests for validation and single-instance behavior
 - unit tests covering argument quoting and input normalization edge cases
+- table-driven validation tests for quoting, identity, URL, verb, and path inputs
 - doctest examples in the public modules
 - rustdoc lint checks for public documentation quality
 - `cargo xtask` automation for docs, feature, package, and release checks
 - `cargo xtask release-audit` checks for release metadata and package contents
 - ignored manual Windows smoke tests available through `cargo xtask smoke`
-- Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, doctests, docs, packaging, dependency policy, and semver checks
+- Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, doctests, docs, feature combinations, packaging, dependency policy, and semver checks
 - non-Windows CI checks that the public API stubs compile and return unsupported errors
 - scheduled CI to catch dependency, runner, and toolchain drift
 - documentation link checks for local Markdown links
@@ -272,7 +277,9 @@ The minimum supported Rust version is `1.82`, matching the current `windows` cra
 - Adoption notes: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md
 - Compatibility: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md
 - Design contract: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md
+- Feature flags: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md
 - Integrations: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md
+- Runtime overhead: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md
 - Testing guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md
 - Trust and maintenance: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md
 - Roadmap: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/ROADMAP.md

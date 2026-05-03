@@ -38,7 +38,7 @@ GitHub Actions checks:
 - examples
 - rustdoc warnings
 - local Markdown links
-- feature combinations
+- no-default, single-feature, and pairwise feature combinations
 - package creation
 - dependency advisories, licenses, duplicate versions, and source policy
 - public API semver compatibility
@@ -57,6 +57,9 @@ caught even when no code changes are active.
 - README install snippets for the current minor line
 - package contents for files that should not ship to crates.io
 
+After publishing, the release checklist includes a docs.rs version-page check so
+the published API docs are confirmed, not merely assumed.
+
 Manual desktop behavior can be checked with:
 
 ```powershell
@@ -66,6 +69,9 @@ cargo xtask smoke
 The smoke command runs ignored Windows desktop tests for shortcuts, Recycle Bin
 behavior, and elevation state. UI-opening checks are opt-in with environment
 variables so automated runs do not unexpectedly open windows or UAC prompts.
+
+See [`overhead.md`](overhead.md) for the runtime model and dependency-surface
+notes.
 
 ## What Is Not Guaranteed
 

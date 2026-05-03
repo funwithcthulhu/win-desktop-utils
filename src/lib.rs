@@ -12,41 +12,28 @@
 //!
 //! # When To Use This
 //!
-//! Use this crate when a Windows desktop app needs to:
-//!
-//! - [`open_with_default`]
-//! - [`open_with_verb`]
-//! - [`show_properties`]
-//! - [`print_with_default`]
-//! - [`open_url`]
-//! - [`reveal_in_explorer`]
-//! - [`open_containing_folder`]
-//! - [`move_to_recycle_bin`]
-//! - [`move_paths_to_recycle_bin`]
-//! - [`empty_recycle_bin`]
-//! - [`empty_recycle_bin_for_root`]
-//! - [`create_shortcut`]
-//! - [`create_url_shortcut`]
-//! - [`single_instance`]
-//! - [`single_instance_with_scope`]
-//! - [`single_instance_with_options`]
-//! - [`roaming_app_data`]
-//! - [`local_app_data`]
-//! - [`ensure_roaming_app_data`]
-//! - [`ensure_local_app_data`]
-//! - [`is_elevated`]
-//! - [`restart_as_admin`]
-//! - [`run_as_admin`]
-//! - [`run_with_verb`]
-//! - [`InstanceScope`]
-//! - [`SingleInstanceOptions`]
-//! - [`DesktopApp`]
-//! - [`ShortcutOptions`]
-//! - [`ShortcutIcon`]
+//! | Need | Start with | Feature |
+//! | --- | --- | --- |
+//! | App identity, app-data paths, and one-instance startup | [`DesktopApp`] | `app` |
+//! | Per-user local or roaming app-data directories | [`ensure_local_app_data`] or [`ensure_roaming_app_data`] | `paths` |
+//! | Current-session single-instance behavior | [`single_instance`] | `instance` |
+//! | Global or builder-style single-instance behavior | [`single_instance_with_scope`] or [`SingleInstanceOptions`] | `instance` |
+//! | Open files, folders, URLs, Properties, or print verbs | [`open_with_default`], [`open_url`], or [`open_with_verb`] | `shell` |
+//! | Select a path in Explorer | [`reveal_in_explorer`] | `shell` |
+//! | Move files or folders to the Recycle Bin | [`move_to_recycle_bin`] or [`move_paths_to_recycle_bin`] | `recycle-bin` |
+//! | Create `.lnk` or `.url` shortcuts | [`create_shortcut`] or [`create_url_shortcut`] | `shortcuts` |
+//! | Check or request administrator elevation | [`is_elevated`], [`restart_as_admin`], or [`run_as_admin`] | `elevation` |
 //!
 //! This crate is Windows-first. Non-Windows builds provide stubs so cross-platform
 //! applications can depend on the crate without wrapping the dependency itself in
 //! `cfg(windows)`.
+//!
+//! # When Not To Use This
+//!
+//! Use the `windows` crate directly when you need broad Win32 coverage, custom
+//! flags, direct COM object ownership, or APIs outside this crate's small
+//! desktop-app scope. Use a GUI framework when you need windows, controls,
+//! rendering, menus, or native widgets.
 //!
 //! # Quick Start
 //!
@@ -102,6 +89,8 @@
 //! The default feature set is intentionally broad for convenience. Feature flags
 //! control this crate's public modules; the underlying `windows` dependency uses
 //! one shared set of Win32 bindings when any Windows API feature is enabled.
+//! CI checks no-default, each individual public feature, and every pairwise
+//! public feature combination.
 //!
 //! # Common Workflows
 //!
@@ -163,6 +152,13 @@
 //!   does not terminate the current process, and rejects arguments containing NUL bytes.
 //! - [`run_as_admin`] and [`run_with_verb`] launch arbitrary commands through
 //!   `ShellExecuteW`.
+//!
+//! # Runtime Model
+//!
+//! The crate does not start a background runtime, async executor, telemetry, or
+//! global worker. Most helpers validate input and then delegate to Windows. The
+//! shortcut and Recycle Bin helpers use short-lived STA worker threads for COM
+//! operations that require apartment-threaded shell APIs.
 //!
 //! # Stability
 //!

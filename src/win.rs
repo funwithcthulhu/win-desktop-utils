@@ -199,3 +199,116 @@ where
         Err(_) => Err(Error::Unsupported(panic_message)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[cfg(any(feature = "elevation", feature = "shell"))]
+    use super::normalize_nonempty_str;
+    #[cfg(any(
+        feature = "elevation",
+        feature = "recycle-bin",
+        feature = "shell",
+        feature = "shortcuts"
+    ))]
+    use super::to_wide_os;
+    #[cfg(any(
+        feature = "elevation",
+        feature = "instance",
+        feature = "shell",
+        feature = "shortcuts"
+    ))]
+    use super::to_wide_str;
+    #[cfg(any(feature = "elevation", feature = "shortcuts"))]
+    use super::{join_quoted_args, os_str_contains_nul, quote_arg};
+    #[cfg(any(feature = "elevation", feature = "shortcuts"))]
+    use std::ffi::{OsStr, OsString};
+
+    #[cfg(any(feature = "elevation", feature = "shortcuts"))]
+    #[test]
+    fn quote_arg_handles_generated_edge_cases() {
+        let cases = [
+            ("", r#""""#),
+            ("alpha", r#""alpha""#),
+            ("two words", r#""two words""#),
+            ("say \"hi\"", r#""say \"hi\"""#),
+            (r"C:\Program Files\demo\", r#""C:\Program Files\demo\\""#),
+            (
+                r#"C:\path with "quotes"\bin"#,
+                r#""C:\path with \"quotes\"\bin""#,
+            ),
+        ];
+
+        for (input, expected) in cases {
+            assert_eq!(quote_arg(OsStr::new(input)), expected);
+        }
+    }
+
+    #[cfg(any(feature = "elevation", feature = "shortcuts"))]
+    #[test]
+    fn join_quoted_args_preserves_argument_count_for_generated_inputs() {
+        let args = [
+            OsString::from("alpha"),
+            OsString::from("two words"),
+            OsString::from(""),
+            OsString::from("quoted \"text\""),
+            OsString::from(r"trailing\"),
+        ];
+
+        let joined = join_quoted_args(&args);
+
+        assert_eq!(joined.matches('"').count() % 2, 0);
+        assert_eq!(joined.split("\" \"").count(), args.len());
+        assert_eq!(
+            joined,
+            r#""alpha" "two words" "" "quoted \"text\"" "trailing\\""#,
+        );
+    }
+
+    #[cfg(any(feature = "elevation", feature = "shortcuts"))]
+    #[test]
+    fn os_str_contains_nul_detects_embedded_nul() {
+        assert!(!os_str_contains_nul(OsStr::new("alpha")));
+        assert!(os_str_contains_nul(OsStr::new("alpha\0beta")));
+    }
+
+    #[cfg(any(feature = "elevation", feature = "shell"))]
+    #[test]
+    fn normalize_nonempty_str_trims_and_rejects_invalid_inputs() {
+        assert_eq!(
+            normalize_nonempty_str("  open  ", "empty", "nul").unwrap(),
+            "open",
+        );
+        assert!(matches!(
+            normalize_nonempty_str("   ", "empty", "nul"),
+            Err(crate::Error::InvalidInput("empty"))
+        ));
+        assert!(matches!(
+            normalize_nonempty_str("a\0b", "empty", "nul"),
+            Err(crate::Error::InvalidInput("nul"))
+        ));
+    }
+
+    #[cfg(any(
+        feature = "elevation",
+        feature = "instance",
+        feature = "shell",
+        feature = "shortcuts"
+    ))]
+    #[test]
+    fn to_wide_str_appends_one_terminating_nul() {
+        let wide = to_wide_str("abc");
+        assert_eq!(wide, [97, 98, 99, 0]);
+    }
+
+    #[cfg(any(
+        feature = "elevation",
+        feature = "recycle-bin",
+        feature = "shell",
+        feature = "shortcuts"
+    ))]
+    #[test]
+    fn to_wide_os_appends_one_terminating_nul() {
+        let wide = to_wide_os(OsStr::new("abc"));
+        assert_eq!(wide, [97, 98, 99, 0]);
+    }
+}

@@ -44,3 +44,14 @@ Use this checklist before publishing a new `win-desktop-utils` release.
 
 8. Create a GitHub release for the tag with a short change summary and verification list.
 9. Confirm crates.io, docs.rs, the GitHub release, and GitHub Actions all reflect the new version.
+
+   Useful checks:
+
+   ```powershell
+   cargo search win-desktop-utils --limit 1
+   cargo info win-desktop-utils
+   ```
+
+   Open the versioned docs.rs page for the release, for example
+   `https://docs.rs/win-desktop-utils/X.Y.Z/win_desktop_utils/`, and confirm it
+   built successfully for the published version.

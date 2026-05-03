@@ -15,12 +15,25 @@ const MARKDOWN_FILES: &[&str] = &[
     "docs/compatibility.md",
     "docs/cookbook.md",
     "docs/design.md",
+    "docs/feature-flags.md",
     "docs/integrations.md",
+    "docs/overhead.md",
     "docs/side-effects.md",
     "docs/testing.md",
     "docs/trust.md",
     "docs/which-api.md",
+    "examples/README.md",
     "tests/README.md",
+];
+
+const PUBLIC_FEATURES: &[&str] = &[
+    "app",
+    "elevation",
+    "instance",
+    "paths",
+    "recycle-bin",
+    "shell",
+    "shortcuts",
 ];
 
 fn main() {
@@ -98,19 +111,28 @@ fn docs_check() -> Result<(), String> {
 fn feature_check() -> Result<(), String> {
     cargo(&["check", "--no-default-features"])?;
 
-    for feature in [
-        "app",
-        "elevation",
-        "instance",
-        "paths",
-        "recycle-bin",
-        "shell",
-        "shortcuts",
-    ] {
+    for feature in PUBLIC_FEATURES {
         cargo(&["check", "--no-default-features", "--features", feature])?;
     }
 
+    for (first, second) in feature_pairs(PUBLIC_FEATURES) {
+        let features = format!("{first},{second}");
+        cargo(&["check", "--no-default-features", "--features", &features])?;
+    }
+
     Ok(())
+}
+
+fn feature_pairs<'a>(features: &'a [&'a str]) -> Vec<(&'a str, &'a str)> {
+    let mut pairs = Vec::new();
+
+    for (index, first) in features.iter().enumerate() {
+        for second in features.iter().skip(index + 1) {
+            pairs.push((*first, *second));
+        }
+    }
+
+    pairs
 }
 
 fn package_check() -> Result<(), String> {

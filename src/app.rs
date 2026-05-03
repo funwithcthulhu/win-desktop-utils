@@ -271,4 +271,27 @@ mod tests {
             ))
         ));
     }
+
+    #[test]
+    fn validate_identity_rejects_all_windows_file_name_reserved_characters() {
+        for reserved in ['<', '>', ':', '"', '/', '\\', '|', '?', '*'] {
+            let value = format!("Demo{reserved}App");
+            let result = validate_identity_part("app_name", value);
+
+            assert!(matches!(
+                result,
+                Err(crate::Error::InvalidInput(
+                    "app_name contains invalid Windows file-name characters"
+                ))
+            ));
+        }
+    }
+
+    #[test]
+    fn validate_identity_trims_surrounding_whitespace() {
+        assert_eq!(
+            validate_identity_part("company_name", "  Demo Company  ".to_owned()).unwrap(),
+            "Demo Company"
+        );
+    }
 }

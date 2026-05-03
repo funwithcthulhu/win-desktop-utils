@@ -64,7 +64,8 @@ cargo xtask smoke
 
 ## CI Coverage
 
-Windows CI runs formatting, tests, clippy, examples, docs, packaging, dependency
+Windows CI runs formatting, tests, clippy, examples, docs, no-default feature
+checks, single-feature checks, pairwise feature checks, packaging, dependency
 policy, semver checks, and release metadata audits. Linux CI checks that the
 non-Windows stubs compile, test, and lint with all features. Scheduled CI runs
 weekly to catch toolchain, runner, and dependency drift.

@@ -49,6 +49,9 @@ The smoke command is intentionally ignored by default test runs because some
 checks can touch the desktop shell. See [`docs/testing.md`](docs/testing.md) for
 UI and elevation opt-in variables.
 
+`cargo xtask feature-check` covers the empty feature set, every individual public
+feature, and every pairwise public feature combination.
+
 If you change cross-platform behavior, also run:
 
 ```powershell

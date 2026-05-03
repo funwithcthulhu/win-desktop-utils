@@ -2,6 +2,15 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## Unreleased
+
+- Expanded feature checking to cover every pairwise public feature combination.
+- Added more table-driven validation and argument quoting tests.
+- Added an examples index with expected behavior, side effects, and feature flags.
+- Added feature-flag recipe documentation and runtime-overhead notes.
+- Polished the crate-level docs for faster API selection.
+- Expanded security policy and post-release docs.rs verification guidance.
+
 ## 0.5.2 - 2026-05-02
 
 - Centralized shared private Windows helper code for COM apartments, shell execution, argument quoting, string normalization, and wide-string conversion.
