@@ -2,7 +2,7 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
-## Unreleased
+## 0.5.4 - 2026-05-03
 
 - Sharpened README positioning and made trust signals more visible.
 - Expanded integration recipes for Tauri, egui, iced, Slint, tray apps, and installer-adjacent helpers.
