@@ -7,11 +7,25 @@
 [![Latest Release](https://img.shields.io/github/v/release/funwithcthulhu/win-desktop-utils)](https://github.com/funwithcthulhu/win-desktop-utils/releases)
 [![MSRV](https://img.shields.io/badge/MSRV-1.82-blue)](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/RELEASE.md)
 
-Windows desktop helpers for Rust apps.
+Windows desktop helpers for Rust apps that need the Windows shell without
+owning raw Win32 glue.
 
-`win-desktop-utils` wraps the small but fiddly Windows desktop tasks that show up in real apps: shell opening, Explorer reveal, Recycle Bin moves, shortcuts, app-data paths, single-instance locks, and elevation prompts.
+`win-desktop-utils` wraps the small but fiddly tasks that show up in real
+desktop apps: shell opening, Explorer reveal, Recycle Bin moves, shortcuts,
+app-data paths, single-instance locks, and elevation prompts. Use the low-level
+helpers directly, or start with `DesktopApp` for the common "app identity,
+app-data directory, and single-instance guard" workflow.
 
-Use the low-level helpers directly, or start with `DesktopApp` for the common “app identity, app-data directory, and single-instance guard” workflow.
+Good fit:
+
+- Rust GUI, tray, launcher, installer-adjacent, and local utility apps on Windows
+- apps that want focused feature flags instead of a large desktop abstraction
+- cross-platform apps that want Windows helpers to type-check behind shared code
+
+Not a fit:
+
+- window creation, widgets, rendering, menus, installers, services, or updates
+- broad Win32 coverage; use the `windows` crate directly for that
 
 ## Scope
 
@@ -81,6 +95,18 @@ fn main() -> Result<(), win_desktop_utils::Error> {
     Ok(())
 }
 ```
+
+## Why Try It
+
+- Small, focused API for common Windows desktop chores.
+- Validates inputs before crossing into shell, COM, known-folder, mutex, and
+  elevation APIs where practical.
+- No background runtime, async executor, telemetry, or global worker.
+- Feature flags let apps opt into only the helper groups they use.
+- Windows CI checks tests, clippy, examples, docs, package creation, dependency
+  policy, public API semver, and feature combinations.
+- Non-Windows CI checks that public stubs compile and return
+  `Error::Unsupported`.
 
 ## Pick The Right Helper
 
@@ -179,6 +205,11 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 
 See [`examples/README.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/examples/README.md) for expected behavior, side effects, and feature flags for each example.
 
+A tiny companion app repo is available at
+[`funwithcthulhu/win-desktop-utils-demo`](https://github.com/funwithcthulhu/win-desktop-utils-demo).
+It shows `DesktopApp`, app-data setup, single-instance startup, shell opening,
+Explorer reveal, elevation checks, and shortcut creation in one small binary.
+
 Run any example with:
 
 ```powershell
@@ -256,6 +287,9 @@ The crate includes:
 - documentation link checks for local Markdown links
 - docs published on docs.rs
 
+These checks are meant to keep the crate boring in the good way: small API,
+documented behavior, predictable side effects, and no surprise runtime.
+
 The minimum supported Rust version is `1.82`, matching the current `windows` crate dependency floor.
 
 ## Support Policy
@@ -279,6 +313,7 @@ The minimum supported Rust version is `1.82`, matching the current `windows` cra
 - Design contract: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md
 - Feature flags: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md
 - Integrations: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md
+- Demo app: https://github.com/funwithcthulhu/win-desktop-utils-demo
 - Runtime overhead: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md
 - Testing guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md
 - Trust and maintenance: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md

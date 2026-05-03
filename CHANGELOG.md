@@ -2,6 +2,12 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## Unreleased
+
+- Sharpened README positioning and made trust signals more visible.
+- Expanded integration recipes for Tauri, egui, iced, Slint, tray apps, and installer-adjacent helpers.
+- Linked a tiny companion demo app repository for copy-paste startup shape.
+
 ## 0.5.3 - 2026-05-03
 
 - Expanded feature checking to cover every pairwise public feature combination.

@@ -18,7 +18,7 @@ single-instance lock.
 
 ```rust,no_run
 struct DesktopState {
-    _guard: win_desktop_utils::InstanceGuard,
+    guard: win_desktop_utils::InstanceGuard,
     local_data_dir: std::path::PathBuf,
 }
 
@@ -29,20 +29,37 @@ fn prepare_desktop() -> Result<Option<DesktopState>, win_desktop_utils::Error> {
     };
 
     Ok(Some(DesktopState {
-        _guard: guard,
+        guard,
         local_data_dir: app.ensure_local_data_dir()?,
     }))
 }
 ```
 
+## Dependency Shape
+
+Use the default feature set when application startup, shell actions, shortcuts,
+and elevation all live in one app crate:
+
+```toml
+[dependencies]
+win-desktop-utils = "0.5"
+```
+
+Use focused features when a small helper crate owns only one workflow:
+
+```toml
+[dependencies]
+win-desktop-utils = { version = "0.5", default-features = false, features = ["app", "shell"] }
+```
+
 ## Tauri
 
-Prepare desktop state before or inside the setup hook, then store the guard in
-managed state so it lives for the whole process.
+Prepare desktop state before `run`. Keep the guard in a local binding that
+lives until `run` returns, and manage only the paths or lightweight state Tauri
+commands need.
 
 ```rust,no_run
-struct DesktopState {
-    _guard: win_desktop_utils::InstanceGuard,
+struct AppPaths {
     local_data_dir: std::path::PathBuf,
 }
 
@@ -51,11 +68,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     };
 
+    let _guard = desktop.guard;
+    let paths = AppPaths {
+        local_data_dir: desktop.local_data_dir,
+    };
+
     tauri::Builder::default()
-        .manage(desktop)
+        .setup(move |app| {
+            app.manage(paths);
+            Ok(())
+        })
         .run(tauri::generate_context!())?;
 
     Ok(())
+}
+```
+
+Commands can then use shell helpers for explicit user actions:
+
+```rust,no_run
+#[tauri::command]
+fn open_docs() -> Result<(), String> {
+    win_desktop_utils::open_url("https://docs.rs/win-desktop-utils")
+        .map_err(|err| err.to_string())
 }
 ```
 
@@ -75,7 +110,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     };
 
-    // Move `state` into your eframe app constructor here.
+    // Move `state` into your eframe app constructor:
+    // eframe::run_native("Editor", options, Box::new(|_| Ok(Box::new(App::new(state)))))?;
     Ok(())
 }
 ```
@@ -96,7 +132,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     };
 
-    // Pass `model` to your iced application initialization here.
+    // Pass `model` to your iced application initialization.
     Ok(())
 }
 ```
@@ -138,6 +174,9 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 }
 ```
 
+Use `open_containing_folder`, `open_url`, or `show_properties` from tray menu
+callbacks only after the user explicitly asks for those shell actions.
+
 ## Portable Apps
 
 Portable apps can still use this crate for user-driven shell behavior such as
@@ -151,6 +190,18 @@ Prefer installer-owned shortcuts for Start Menu and Desktop entries created at
 install time. Use `create_shortcut` from the app when the user chooses a
 shortcut location or when the shortcut belongs to user data rather than install
 state.
+
+For small installer-adjacent command-line helpers, keep shell side effects behind
+clear subcommands:
+
+```rust,no_run
+fn create_docs_shortcut(shortcut: std::path::PathBuf) -> win_desktop_utils::Result<()> {
+    win_desktop_utils::create_url_shortcut(
+        shortcut,
+        "https://docs.rs/win-desktop-utils",
+    )
+}
+```
 
 ## Cross-Platform Crates
 
