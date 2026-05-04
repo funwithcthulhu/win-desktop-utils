@@ -6,7 +6,7 @@ clear behavior, validation, examples, and docs.
 ## Current Focus
 
 - Keep the public API easy to understand from the README and docs.rs.
-- Keep examples copy-pasteable for normal Windows desktop apps.
+- Keep examples ready to adapt for normal Windows desktop apps.
 - Preserve a low dependency surface through feature flags.
 - Keep MSRV and public API compatibility checked in CI.
 - Keep release metadata, package contents, and manual smoke coverage easy to audit.

@@ -1,6 +1,6 @@
 # Design Contract
 
-`win-desktop-utils` should stay small, explicit, and easy to trust.
+`win-desktop-utils` should stay small, explicit, and auditable.
 
 This document is the bar for future changes. It exists so the crate can improve
 without becoming a grab bag of Windows APIs.
@@ -37,7 +37,7 @@ New public APIs should satisfy all of these:
 
 ## Side-Effect Rules
 
-Side-effecting helpers should be boringly honest:
+Side-effecting helpers should be explicit about what they do:
 
 - Launching another process is a side effect.
 - Showing UAC is a side effect.

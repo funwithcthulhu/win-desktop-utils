@@ -1,6 +1,6 @@
 # Examples
 
-These examples are intended to be small, copy-pasteable starting points. Some
+These examples are intended to be small, ready-to-adapt starting points. Some
 examples open Windows UI or touch user-visible desktop state; check the behavior
 column before running them.
 

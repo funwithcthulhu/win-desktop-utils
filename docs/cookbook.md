@@ -1,6 +1,6 @@
 # Cookbook
 
-Copy-paste recipes for common Windows desktop app tasks.
+Ready-to-adapt recipes for common Windows desktop app tasks.
 
 ## Start A Single-Instance App
 

@@ -32,7 +32,7 @@ pub struct ShortcutIcon {
 }
 
 impl ShortcutIcon {
-    /// Creates icon configuration for a shortcut.
+    /// Selects an icon resource path and zero-based icon index.
     pub fn new(path: impl Into<PathBuf>, index: i32) -> Self {
         Self {
             path: path.into(),
@@ -70,12 +70,12 @@ pub struct ShortcutOptions {
 }
 
 impl ShortcutOptions {
-    /// Creates empty shortcut options.
+    /// Creates options with no arguments, working directory, icon, or description.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Replaces the shortcut argument list.
+    /// Replaces the command-line arguments stored in the shortcut.
     pub fn arguments<I, S>(mut self, arguments: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -85,25 +85,25 @@ impl ShortcutOptions {
         self
     }
 
-    /// Appends one shortcut argument.
+    /// Appends one command-line argument stored in the shortcut.
     pub fn argument(mut self, argument: impl Into<OsString>) -> Self {
         self.arguments.push(argument.into());
         self
     }
 
-    /// Sets the shortcut working directory.
+    /// Sets the working directory used when the shortcut target starts.
     pub fn working_directory(mut self, path: impl Into<PathBuf>) -> Self {
         self.working_directory = Some(path.into());
         self
     }
 
-    /// Sets the shortcut icon resource.
+    /// Sets the icon resource used by Explorer for the shortcut.
     pub fn icon(mut self, path: impl Into<PathBuf>, index: i32) -> Self {
         self.icon = Some(ShortcutIcon::new(path, index));
         self
     }
 
-    /// Sets the shortcut description.
+    /// Sets the shortcut description shown by Explorer.
     pub fn description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self

@@ -138,7 +138,7 @@ pub fn ensure_local_app_data(app_name: &str) -> Result<PathBuf> {
 }
 
 #[cfg(feature = "app")]
-/// A small convenience wrapper around common Windows desktop app identity tasks.
+/// Validated Windows desktop app identity used by the app-data and single-instance helpers.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DesktopApp {
     company_name: Option<String>,
@@ -365,7 +365,7 @@ pub struct ShortcutIcon {
 
 #[cfg(feature = "shortcuts")]
 impl ShortcutIcon {
-    /// Creates icon configuration for a shortcut.
+    /// Selects an icon resource path and zero-based icon index.
     pub fn new(path: impl Into<PathBuf>, index: i32) -> Self {
         Self {
             path: path.into(),
@@ -390,12 +390,12 @@ pub struct ShortcutOptions {
 
 #[cfg(feature = "shortcuts")]
 impl ShortcutOptions {
-    /// Creates empty shortcut options.
+    /// Creates options with no arguments, working directory, icon, or description.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Replaces the shortcut argument list.
+    /// Replaces the command-line arguments stored in the shortcut.
     pub fn arguments<I, S>(mut self, arguments: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -405,25 +405,25 @@ impl ShortcutOptions {
         self
     }
 
-    /// Appends one shortcut argument.
+    /// Appends one command-line argument stored in the shortcut.
     pub fn argument(mut self, argument: impl Into<OsString>) -> Self {
         self.arguments.push(argument.into());
         self
     }
 
-    /// Sets the shortcut working directory.
+    /// Sets the working directory used when the shortcut target starts.
     pub fn working_directory(mut self, path: impl Into<PathBuf>) -> Self {
         self.working_directory = Some(path.into());
         self
     }
 
-    /// Sets the shortcut icon resource.
+    /// Sets the icon resource used by Explorer for the shortcut.
     pub fn icon(mut self, path: impl Into<PathBuf>, index: i32) -> Self {
         self.icon = Some(ShortcutIcon::new(path, index));
         self
     }
 
-    /// Sets the shortcut description.
+    /// Sets the shortcut description shown by Explorer.
     pub fn description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self

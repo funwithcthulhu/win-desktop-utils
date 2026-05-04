@@ -22,7 +22,7 @@ body:
     id: crate-version
     attributes:
       label: Crate version
-      placeholder: "0.3.0"
+      placeholder: "0.5.6"
     validations:
       required: true
   - type: input

@@ -242,7 +242,7 @@ mod tests {
 
     #[cfg(any(feature = "elevation", feature = "shortcuts"))]
     #[test]
-    fn quote_arg_handles_generated_edge_cases() {
+    fn quote_arg_handles_empty_spaces_quotes_and_trailing_backslashes() {
         let cases = [
             ("", r#""""#),
             ("alpha", r#""alpha""#),
@@ -262,7 +262,7 @@ mod tests {
 
     #[cfg(any(feature = "elevation", feature = "shortcuts"))]
     #[test]
-    fn join_quoted_args_preserves_argument_count_for_generated_inputs() {
+    fn join_quoted_args_preserves_argument_boundaries() {
         let args = [
             OsString::from("alpha"),
             OsString::from("two words"),

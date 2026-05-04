@@ -10,19 +10,19 @@
 Windows desktop helpers for Rust apps that need the Windows shell without
 owning raw Win32 glue.
 
-`win-desktop-utils` wraps the small but fiddly tasks that show up in real
-desktop apps: shell opening, Explorer reveal, Recycle Bin moves, shortcuts,
-app-data paths, single-instance locks, and elevation prompts. Use the low-level
-helpers directly, or start with `DesktopApp` for the common "app identity,
+`win-desktop-utils` wraps Windows-specific tasks that show up in desktop apps:
+shell opening, Explorer reveal, Recycle Bin moves, shortcuts, app-data paths,
+single-instance locks, and elevation prompts. Use the low-level helpers
+directly, or start with `DesktopApp` for the common "app identity,
 app-data directory, and single-instance guard" workflow.
 
-Good fit:
+Suitable for:
 
 - Rust GUI, tray, launcher, installer-adjacent, and local utility apps on Windows
 - apps that want focused feature flags instead of a large desktop abstraction
 - cross-platform apps that want Windows helpers to type-check behind shared code
 
-Not a fit:
+Out of scope:
 
 - window creation, widgets, rendering, menus, installers, services, or updates
 - broad Win32 coverage; use the `windows` crate directly for that
@@ -96,9 +96,10 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 }
 ```
 
-## Why Try It
+## Why Use It
 
-- Small, focused API for common Windows desktop chores.
+- Small API for Windows desktop tasks that otherwise require direct shell,
+  COM, mutex, known-folder, or elevation calls.
 - Validates inputs before crossing into shell, COM, known-folder, mutex, and
   elevation APIs where practical.
 - No background runtime, async executor, telemetry, or global worker.
@@ -112,7 +113,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 | Need | Start with | Feature | Notes |
 | --- | --- | --- | --- |
-| App identity, app-data paths, and one-instance startup | `DesktopApp` | `app` | Best first stop for normal apps |
+| App identity, app-data paths, and one-instance startup | `DesktopApp` | `app` | Keeps startup setup together |
 | Per-user config, cache, logs, or state folders | `ensure_local_app_data` / `ensure_roaming_app_data` | `paths` | Creates folders only when using `ensure_*` |
 | Current-session or global single-instance behavior | `single_instance` / `SingleInstanceOptions` | `instance` | Keep the guard alive |
 | Open files, URLs, folders, Properties, or print verbs | `open_with_default`, `open_url`, `open_with_verb` | `shell` | Uses user shell associations |
@@ -165,7 +166,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 ## Cookbook
 
-The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md) file has copy-paste recipes for:
+The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md) file has ready-to-adapt recipes for:
 
 - starting a single-instance app
 - creating local and roaming app-data folders
@@ -176,7 +177,7 @@ The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blo
 
 Additional guides:
 
-- [`docs/adoption.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md): integration notes for common app shapes
+- [`docs/adoption.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md): integration notes for common app layouts
 - [`docs/feature-flags.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md): minimal dependency snippets by feature
 - [`docs/integrations.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md): framework and packaging integration sketches
 - [`docs/overhead.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md): runtime model, side costs, and dependency surface
@@ -205,7 +206,7 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 
 See [`examples/README.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/examples/README.md) for expected behavior, side effects, and feature flags for each example.
 
-A tiny companion app repo is available at
+A companion demo app repo is available at
 [`funwithcthulhu/win-desktop-utils-demo`](https://github.com/funwithcthulhu/win-desktop-utils-demo).
 It shows `DesktopApp`, app-data setup, single-instance startup, shell opening,
 Explorer reveal, elevation checks, and shortcut creation in one small binary.
@@ -222,7 +223,7 @@ Use `windows` directly when you need broad Win32 coverage, custom flags, direct
 COM object ownership, or APIs outside this crate's scope.
 
 Use `win-desktop-utils` when you want a small, documented layer for common
-desktop app chores with validation, Rust-friendly builders, examples, and a
+desktop app tasks with validation, Rust-friendly builders, examples, and a
 stable public API.
 
 ## Alternatives And Scope
@@ -258,7 +259,7 @@ Notable error distinctions include:
 - `empty_recycle_bin` and `empty_recycle_bin_for_root` permanently empty Recycle Bin contents without showing shell UI.
 - `create_shortcut` requires an absolute `.lnk` path, an existing output parent directory, and an existing absolute target path without NUL bytes.
 - `create_url_shortcut` requires an absolute `.url` path whose parent is an existing directory and rejects line breaks in URLs to avoid malformed shortcut files.
-- `roaming_app_data` and `local_app_data` resolve the base directory via `SHGetKnownFolderPath`.
+- `roaming_app_data` and `local_app_data` reject empty, whitespace-only, or NUL-containing app names, then resolve the base directory via `SHGetKnownFolderPath`.
 - `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
 - `single_instance_with_scope` can opt into either the current-session (`Local\...`) or global (`Global\...`) namespace.
 - `SingleInstanceOptions` provides a small builder around single-instance app ID and scope selection.
@@ -287,8 +288,8 @@ The crate includes:
 - documentation link checks for local Markdown links
 - docs published on docs.rs
 
-These checks are meant to keep the crate boring in the good way: small API,
-documented behavior, predictable side effects, and no surprise runtime.
+The intended shape is a small API, documented behavior, predictable side
+effects, and no surprise runtime.
 
 The minimum supported Rust version is `1.82`, matching the current `windows` crate dependency floor.
 
@@ -316,5 +317,5 @@ The minimum supported Rust version is `1.82`, matching the current `windows` cra
 - Demo app: https://github.com/funwithcthulhu/win-desktop-utils-demo
 - Runtime overhead: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md
 - Testing guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md
-- Trust and maintenance: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md
+- Maintenance policy: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md
 - Roadmap: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/ROADMAP.md

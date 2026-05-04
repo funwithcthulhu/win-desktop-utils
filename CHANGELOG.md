@@ -2,6 +2,12 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## 0.5.6 - 2026-05-04
+
+- Added direct app-data path validation for embedded-NUL app names.
+- Made path integration tests use unique app-data directories and clean them up.
+- Revised README and supporting docs to reduce generic wording and clarify API boundaries.
+
 ## 0.5.5 - 2026-05-03
 
 - Added QA coverage for embedded-NUL path inputs across shell and Recycle Bin helpers.
@@ -9,9 +15,9 @@ All notable changes to `win-desktop-utils` are documented here.
 
 ## 0.5.4 - 2026-05-03
 
-- Sharpened README positioning and made trust signals more visible.
-- Expanded integration recipes for Tauri, egui, iced, Slint, tray apps, and installer-adjacent helpers.
-- Linked a tiny companion demo app repository for copy-paste startup shape.
+- Clarified README scope and surfaced maintenance and verification signals.
+- Expanded integration notes for Tauri, egui, iced, Slint, tray apps, and installer-adjacent helpers.
+- Linked the companion demo app repository.
 
 ## 0.5.3 - 2026-05-03
 
@@ -27,14 +33,14 @@ All notable changes to `win-desktop-utils` are documented here.
 - Centralized shared private Windows helper code for COM apartments, shell execution, argument quoting, string normalization, and wide-string conversion.
 - Added ignored manual Windows desktop smoke tests and `cargo xtask smoke`.
 - Added `cargo xtask release-audit` for version metadata and package-content checks.
-- Added framework integration notes and trust/maintenance documentation.
+- Added framework integration notes and maintenance documentation.
 - Added a README helper decision matrix.
 - Added scheduled CI coverage for drift detection.
 
 ## 0.5.1 - 2026-05-02
 
 - Added a design contract that documents project scope, API acceptance rules, side-effect rules, and release expectations.
-- Added adoption notes for common app shapes without expanding the public API.
+- Added adoption notes for common app layouts without expanding the public API.
 - Added a testing guide and test layout documentation.
 - Added `cargo xtask` automation for docs, feature, package, and release checks.
 - Enabled rustdoc documentation lints in the crate and CI.
@@ -47,7 +53,7 @@ All notable changes to `win-desktop-utils` are documented here.
 - Added `docs/which-api.md`, `docs/side-effects.md`, and `docs/compatibility.md`.
 - Added a cohesive `examples/desktop_app.rs` startup example.
 - Added a project roadmap and code of conduct.
-- Expanded README trust and adoption notes with license, release, and MSRV badges, scope guidance, direct `windows` crate comparison, and documentation links.
+- Expanded README maintenance and adoption notes with license, release, and MSRV badges, scope guidance, direct `windows` crate comparison, and documentation links.
 - Expanded CI coverage with explicit doctests, non-Windows stub checks, and Markdown link checking.
 
 ## 0.4.0
@@ -55,7 +61,7 @@ All notable changes to `win-desktop-utils` are documented here.
 - Added crate feature flags so consumers can opt into focused API groups.
 - Added `DesktopApp` as a convenience facade for app-data and single-instance startup workflows.
 - Expanded crate-level docs into a docs.rs-oriented manual with feature flags, workflows, and side-effect notes.
-- Added a cookbook with copy-paste recipes for common Windows desktop app tasks.
+- Added a cookbook with ready-to-adapt recipes for common Windows desktop app tasks.
 - Improved crate discoverability metadata with shortcut and Explorer-oriented keywords.
 - Added contribution guidelines, security policy, and GitHub issue templates.
 

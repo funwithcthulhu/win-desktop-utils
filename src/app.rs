@@ -1,4 +1,4 @@
-//! Friendly facade for common desktop app startup workflows.
+//! App-startup facade for identity, app-data paths, and single-instance guards.
 
 use std::path::PathBuf;
 
@@ -10,7 +10,7 @@ use crate::paths::{
     ensure_local_app_data, ensure_roaming_app_data, local_app_data, roaming_app_data,
 };
 
-/// A small convenience wrapper around common Windows desktop app identity tasks.
+/// Validated Windows desktop app identity used by the app-data and single-instance helpers.
 ///
 /// `DesktopApp` keeps a validated app identity in one place and uses it for app-data
 /// paths and single-instance locking. It does not own any global state.

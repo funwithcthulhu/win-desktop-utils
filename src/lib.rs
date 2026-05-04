@@ -6,7 +6,7 @@
 //! application code that uses them.
 //!
 //! The low-level helpers stay available as small functions, and [`DesktopApp`]
-//! provides a friendlier facade for common app startup and app-data workflows.
+//! keeps common app startup and app-data setup in one place.
 //! On non-Windows targets, the public API still compiles and operational helpers
 //! return [`Error::Unsupported`].
 //!
@@ -143,7 +143,7 @@
 //! - [`empty_recycle_bin`] permanently empties the Recycle Bin without showing shell UI.
 //! - [`create_shortcut`] uses `IShellLinkW` on a dedicated STA thread.
 //! - [`roaming_app_data`] and [`local_app_data`] resolve their base directories via
-//!   `SHGetKnownFolderPath`.
+//!   `SHGetKnownFolderPath` after rejecting empty or NUL-containing app names.
 //! - [`single_instance`] uses a `Local\...` named mutex, so the lock is scoped to the
 //!   current Windows session, and `app_id` cannot contain backslashes.
 //! - [`single_instance_with_scope`] can opt into either the current-session or global

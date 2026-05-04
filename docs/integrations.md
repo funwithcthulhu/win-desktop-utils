@@ -1,12 +1,12 @@
 # Integration Notes
 
 These notes show where `win-desktop-utils` usually sits inside application
-startup code. They are deliberately glue examples, not a push to add framework
-features to this crate.
+startup code. They are glue examples, not proposals to add framework-specific
+APIs to this crate.
 
 ## General Pattern
 
-Most desktop apps should do this before the main UI event loop starts:
+A typical desktop app can do this before the main UI event loop starts:
 
 1. Build a `DesktopApp` identity.
 2. Acquire and store the single-instance guard.

@@ -32,6 +32,18 @@ fn known_folder_path(folder_id: &GUID, context: &'static str) -> Result<PathBuf>
     Ok(path)
 }
 
+fn validate_app_name(app_name: &str) -> Result<&str> {
+    if app_name.trim().is_empty() {
+        return Err(Error::InvalidInput("app_name cannot be empty"));
+    }
+
+    if app_name.contains('\0') {
+        return Err(Error::InvalidInput("app_name cannot contain NUL bytes"));
+    }
+
+    Ok(app_name)
+}
+
 /// Returns the per-user roaming app-data directory for the given app name.
 ///
 /// This function resolves the roaming app-data known folder via `SHGetKnownFolderPath`
@@ -39,7 +51,8 @@ fn known_folder_path(folder_id: &GUID, context: &'static str) -> Result<PathBuf>
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `app_name` is empty or whitespace only.
+/// Returns [`Error::InvalidInput`] if `app_name` is empty, whitespace only, or
+/// contains NUL bytes.
 /// Returns [`Error::WindowsApi`] if the Windows known-folder lookup fails.
 ///
 /// # Examples
@@ -50,9 +63,7 @@ fn known_folder_path(folder_id: &GUID, context: &'static str) -> Result<PathBuf>
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
 pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
-    if app_name.trim().is_empty() {
-        return Err(Error::InvalidInput("app_name cannot be empty"));
-    }
+    let app_name = validate_app_name(app_name)?;
 
     let base = known_folder_path(
         &FOLDERID_RoamingAppData,
@@ -68,7 +79,8 @@ pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidInput`] if `app_name` is empty or whitespace only.
+/// Returns [`Error::InvalidInput`] if `app_name` is empty, whitespace only, or
+/// contains NUL bytes.
 /// Returns [`Error::WindowsApi`] if the Windows known-folder lookup fails.
 ///
 /// # Examples
@@ -79,9 +91,7 @@ pub fn roaming_app_data(app_name: &str) -> Result<PathBuf> {
 /// # Ok::<(), win_desktop_utils::Error>(())
 /// ```
 pub fn local_app_data(app_name: &str) -> Result<PathBuf> {
-    if app_name.trim().is_empty() {
-        return Err(Error::InvalidInput("app_name cannot be empty"));
-    }
+    let app_name = validate_app_name(app_name)?;
 
     let base = known_folder_path(&FOLDERID_LocalAppData, "SHGetKnownFolderPath(LocalAppData)")?;
     Ok(base.join(app_name))
@@ -133,7 +143,29 @@ pub fn ensure_local_app_data(app_name: &str) -> Result<PathBuf> {
 
 #[cfg(test)]
 mod tests {
-    use super::{known_folder_path, FOLDERID_LocalAppData, FOLDERID_RoamingAppData};
+    use super::{
+        known_folder_path, validate_app_name, FOLDERID_LocalAppData, FOLDERID_RoamingAppData,
+    };
+
+    #[test]
+    fn validate_app_name_rejects_empty_string() {
+        let result = validate_app_name("   ");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput("app_name cannot be empty"))
+        ));
+    }
+
+    #[test]
+    fn validate_app_name_rejects_nul_bytes() {
+        let result = validate_app_name("demo\0app");
+        assert!(matches!(
+            result,
+            Err(crate::Error::InvalidInput(
+                "app_name cannot contain NUL bytes"
+            ))
+        ));
+    }
 
     #[test]
     fn known_folder_roaming_app_data_exists() {

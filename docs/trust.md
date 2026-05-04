@@ -76,7 +76,7 @@ notes.
 ## What Is Not Guaranteed
 
 This crate does not guarantee that a user's installed shell handlers support a
-given verb, that Explorer is available in every account/session shape, or that
+given verb, that Explorer is available in every account/session model, or that
 service and scheduled-task environments behave like an interactive desktop. It
 also does not own installer, updater, GUI framework, or package-manager policy.
 

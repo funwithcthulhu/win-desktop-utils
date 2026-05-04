@@ -1,7 +1,7 @@
 # Adoption Notes
 
-These examples show where `win-desktop-utils` usually fits in real application
-shapes. They are intentionally integration notes, not new feature proposals.
+These examples show where `win-desktop-utils` usually fits in application
+layouts. They are integration notes, not new feature proposals.
 
 For framework-specific startup sketches, see [`integrations.md`](integrations.md).
 
@@ -25,14 +25,14 @@ fn prepare_desktop_app() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Use a target-specific dependency for this shape:
+Use a target-specific dependency for this layout:
 
 ```toml
 [target.'cfg(windows)'.dependencies]
 win-desktop-utils = "0.5"
 ```
 
-## Tauri-Style Startup
+## Tauri Startup
 
 Use `DesktopApp` before or during the app setup hook. Keep the returned
 `InstanceGuard` in application state for the lifetime of the process.
@@ -48,7 +48,7 @@ fn prepare_startup() -> Result<Option<win_desktop_utils::InstanceGuard>, win_des
 Handle `Ok(None)` with your app's own policy: show a message, exit quietly, or
 signal the existing instance.
 
-## eframe Or egui Startup
+## eframe/egui Startup
 
 Acquire the single-instance guard before starting the GUI event loop, then keep
 it alive beside your app state:
@@ -87,7 +87,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 }
 ```
 
-## Installer Shortcut Or App-Created Shortcut?
+## Installer Shortcut Or App-Created Shortcut
 
 Prefer installer-created shortcuts when:
 
@@ -101,7 +101,7 @@ Use `create_shortcut` when:
 - a portable app creates a shortcut in a user-owned folder
 - the shortcut is part of app state rather than install state
 
-## Service Or Scheduled Task Code
+## Service And Scheduled Task Code
 
 This crate targets interactive desktop behavior. For services and scheduled
 tasks, avoid shell UI and Explorer helpers unless you have tested the exact
