@@ -1,7 +1,7 @@
 # Integration Notes
 
 These notes show where `win-desktop-utils` usually sits inside application
-startup code. They are glue examples, not proposals to add framework-specific
+startup code. They are startup examples, not proposals to add framework-specific
 APIs to this crate.
 
 ## General Pattern
@@ -45,7 +45,7 @@ and elevation all live in one app crate:
 win-desktop-utils = "0.5"
 ```
 
-Use focused features when a small helper crate owns only one workflow:
+Disable defaults when one crate needs only a subset of the helpers:
 
 ```toml
 [dependencies]

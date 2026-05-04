@@ -1,6 +1,6 @@
 # Cookbook
 
-Ready-to-adapt recipes for common Windows desktop app tasks.
+Short examples for Windows desktop app tasks.
 
 ## Start A Single-Instance App
 

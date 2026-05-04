@@ -1,8 +1,7 @@
 # Examples
 
-These examples are intended to be small, ready-to-adapt starting points. Some
-examples open Windows UI or touch user-visible desktop state; check the behavior
-column before running them.
+These examples are small starting points. Some open Windows UI or touch
+user-visible desktop state; check the behavior column before running them.
 
 Run an example with:
 
@@ -28,7 +27,7 @@ cargo run --example single_instance
 | `shortcuts.rs` | `shortcuts` | Creates `.lnk` and `.url` shortcuts in a temp location. |
 | `recycle_bin.rs` | `recycle-bin` | Moves a temp file to the Recycle Bin. |
 
-## Feature-Focused Runs
+## Run With Selected Features
 
 Most examples can be checked with the full default feature set:
 
@@ -36,7 +35,7 @@ Most examples can be checked with the full default feature set:
 cargo check --examples
 ```
 
-When testing a focused dependency surface, use the feature listed above:
+When testing a limited dependency surface, use the feature listed above:
 
 ```powershell
 cargo run --no-default-features --features paths --example paths

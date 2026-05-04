@@ -28,7 +28,7 @@ validation tests over CI tests that open windows.
 
 ## Local Commands
 
-Use focused commands while developing:
+Use these commands while developing:
 
 ```powershell
 cargo test

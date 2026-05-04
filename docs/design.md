@@ -7,10 +7,11 @@ without becoming a grab bag of Windows APIs.
 
 ## What This Crate Is
 
-- A focused helper crate for common interactive Windows desktop app workflows.
+- A helper crate for interactive Windows desktop app workflows.
 - A validation layer around shell, shortcut, app-data, single-instance, Recycle
   Bin, and elevation tasks.
-- A crate that favors predictable Rust APIs over exposing raw Win32 types.
+- A crate that exposes Rust APIs with explicit errors and side effects instead
+  of raw Win32 types.
 - A Windows-first crate with non-Windows stubs for cross-platform type-checking.
 
 ## What This Crate Is Not
@@ -33,7 +34,7 @@ New public APIs should satisfy all of these:
 - Errors map to the crate's small public `Error` type.
 - The non-Windows behavior is explicit and returns `Error::Unsupported`.
 - The API can be explained in a short README bullet.
-- The API has focused tests and an example when users are likely to copy it.
+- The API has tests and an example when users are likely to copy it.
 
 ## Side-Effect Rules
 
@@ -66,8 +67,8 @@ Every public API should have:
 - side-effect notes when relevant
 - a doctest or `no_run` example when practical
 
-Broader behavior should live in focused Markdown docs rather than in long README
-sections. The README should route users to the right guide.
+Broader behavior should live in separate Markdown docs rather than in long
+README sections. The README should route users to the right guide.
 
 ## Release Rules
 

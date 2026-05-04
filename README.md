@@ -7,19 +7,18 @@
 [![Latest Release](https://img.shields.io/github/v/release/funwithcthulhu/win-desktop-utils)](https://github.com/funwithcthulhu/win-desktop-utils/releases)
 [![MSRV](https://img.shields.io/badge/MSRV-1.82-blue)](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/RELEASE.md)
 
-Windows desktop helpers for Rust apps that need the Windows shell without
-owning raw Win32 glue.
+Rust helpers for common Windows desktop tasks: shell launch, Explorer reveal,
+Recycle Bin moves, shortcuts, app-data paths, single-instance checks, and
+elevation relaunches.
 
-`win-desktop-utils` wraps Windows-specific tasks that show up in desktop apps:
-shell opening, Explorer reveal, Recycle Bin moves, shortcuts, app-data paths,
-single-instance locks, and elevation prompts. Use the low-level helpers
-directly, or start with `DesktopApp` for the common "app identity,
-app-data directory, and single-instance guard" workflow.
+`win-desktop-utils` is a thin layer over the Win32 and shell calls used for
+those tasks. Call the helpers directly, or use `DesktopApp` when startup needs
+an app identity, app-data directory, and single-instance guard.
 
-Suitable for:
+Use it for:
 
 - Rust GUI, tray, launcher, installer-adjacent, and local utility apps on Windows
-- apps that want focused feature flags instead of a large desktop abstraction
+- apps that want to enable only paths, shell, shortcuts, elevation, or instance helpers
 - cross-platform apps that want Windows helpers to type-check behind shared code
 
 Out of scope:
@@ -29,7 +28,7 @@ Out of scope:
 
 ## Scope
 
-This crate currently provides helpers to:
+The public API covers:
 
 - open an existing file or directory with the default Windows handler
 - open an existing file or directory with an explicit Windows shell verb
@@ -57,7 +56,8 @@ compiles and operational helpers return `Error::Unsupported`.
 win-desktop-utils = "0.5"
 ```
 
-Default features enable the full API. To keep a dependency focused, disable defaults and opt into only the modules you need:
+Default features enable the full API. To use only part of the crate, disable
+defaults and opt into the modules you need:
 
 ```toml
 [dependencies]
@@ -95,19 +95,6 @@ fn main() -> Result<(), win_desktop_utils::Error> {
     Ok(())
 }
 ```
-
-## Why Use It
-
-- Small API for Windows desktop tasks that otherwise require direct shell,
-  COM, mutex, known-folder, or elevation calls.
-- Validates inputs before crossing into shell, COM, known-folder, mutex, and
-  elevation APIs where practical.
-- No background runtime, async executor, telemetry, or global worker.
-- Feature flags let apps opt into only the helper groups they use.
-- Windows CI checks tests, clippy, examples, docs, package creation, dependency
-  policy, public API semver, and feature combinations.
-- Non-Windows CI checks that public stubs compile and return
-  `Error::Unsupported`.
 
 ## Pick The Right Helper
 
@@ -166,7 +153,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 ## Cookbook
 
-The [`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md) file has ready-to-adapt recipes for:
+[`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md) has short examples for:
 
 - starting a single-instance app
 - creating local and roaming app-data folders
@@ -202,14 +189,14 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 - single-instance enforcement
 - single-instance enforcement across all sessions
 - builder-style single-instance options
-- cohesive `DesktopApp` startup flow
+- `DesktopApp` startup flow
 
 See [`examples/README.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/examples/README.md) for expected behavior, side effects, and feature flags for each example.
 
-A companion demo app repo is available at
+The companion demo app is
 [`funwithcthulhu/win-desktop-utils-demo`](https://github.com/funwithcthulhu/win-desktop-utils-demo).
-It shows `DesktopApp`, app-data setup, single-instance startup, shell opening,
-Explorer reveal, elevation checks, and shortcut creation in one small binary.
+It wires `DesktopApp`, app-data setup, single-instance startup, shell opening,
+Explorer reveal, elevation checks, and shortcut creation into one small binary.
 
 Run any example with:
 
@@ -217,25 +204,10 @@ Run any example with:
 cargo run --example single_instance
 ```
 
-## Why Not Use `windows` Directly?
-
-Use `windows` directly when you need broad Win32 coverage, custom flags, direct
-COM object ownership, or APIs outside this crate's scope.
-
-Use `win-desktop-utils` when you want a small, documented layer for common
-desktop app tasks with validation, Rust-friendly builders, examples, and a
-stable public API.
-
-## Alternatives And Scope
-
-This crate is not a GUI framework, installer, updater, service framework, or
-cross-platform desktop abstraction. It works well alongside GUI frameworks and
-installer tools by handling a small set of Windows desktop tasks that application
-code often needs after startup or in response to user actions.
-
 ## Error behavior
 
-The crate exposes a small public error type with explicit path-related cases.
+Errors use the crate's `Error` enum. Path validation gets distinct variants
+where callers can act on the failure.
 
 Notable error distinctions include:
 
@@ -272,7 +244,7 @@ Notable error distinctions include:
 
 ## Quality
 
-The crate includes:
+CI and `xtask` check:
 
 - automated tests for validation and single-instance behavior
 - unit tests covering argument quoting and input normalization edge cases
@@ -288,10 +260,8 @@ The crate includes:
 - documentation link checks for local Markdown links
 - docs published on docs.rs
 
-The intended shape is a small API, documented behavior, predictable side
-effects, and no surprise runtime.
-
-The minimum supported Rust version is `1.82`, matching the current `windows` crate dependency floor.
+The minimum supported Rust version is `1.82`, matching the current `windows`
+crate dependency floor.
 
 ## Support Policy
 

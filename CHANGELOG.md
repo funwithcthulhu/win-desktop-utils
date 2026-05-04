@@ -2,6 +2,10 @@
 
 All notable changes to `win-desktop-utils` are documented here.
 
+## 0.5.7 - 2026-05-04
+
+- Clarified documentation.
+
 ## 0.5.6 - 2026-05-04
 
 - Added direct app-data path validation for embedded-NUL app names.

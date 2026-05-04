@@ -1,7 +1,7 @@
-# Trust And Maintenance
+# Maintenance
 
 This crate is small on purpose. Its main promise is not broad Windows coverage;
-it is predictable behavior for common interactive desktop app tasks.
+it is documented behavior for the interactive desktop tasks it supports.
 
 ## Compatibility Contract
 
@@ -9,8 +9,8 @@ it is predictable behavior for common interactive desktop app tasks.
 - Supported Rust: 1.82 and newer.
 - Public API compatibility is checked with `cargo-semver-checks`.
 - Non-Windows targets compile public stubs that return `Error::Unsupported`.
-- Default features expose the full API; focused feature flags are available for
-  smaller dependency surfaces.
+- Default features expose the full API; feature flags are available for smaller
+  dependency surfaces.
 
 ## Runtime Behavior Contract
 

@@ -4,7 +4,8 @@ Thanks for improving `win-desktop-utils`.
 
 ## Scope
 
-This crate is intentionally small. Contributions should fit common Windows desktop app workflows and keep the public API safe, focused, and easy to explain.
+This crate is intentionally small. Contributions should fit Windows desktop app
+workflows and keep new APIs narrow enough to document and test fully.
 
 Good fits include:
 
@@ -79,7 +80,7 @@ A new API should have:
 - explicit input validation before side effects start
 - rustdoc explaining purpose, errors, and side effects
 - Markdown docs when the behavior has user-visible consequences
-- focused tests, including validation failures
+- tests that cover validation failures
 - non-Windows stub behavior returning `Error::Unsupported`
 - an example when users are likely to copy the workflow
 
