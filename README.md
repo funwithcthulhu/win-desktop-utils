@@ -7,13 +7,12 @@
 [![Latest Release](https://img.shields.io/github/v/release/funwithcthulhu/win-desktop-utils)](https://github.com/funwithcthulhu/win-desktop-utils/releases)
 [![MSRV](https://img.shields.io/badge/MSRV-1.82-blue)](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/RELEASE.md)
 
-Rust helpers for common Windows desktop tasks: shell launch, Explorer reveal,
-Recycle Bin moves, shortcuts, app-data paths, single-instance checks, and
-elevation relaunches.
+Rust helpers for common Windows desktop tasks: shell launch, Explorer reveal, Recycle
+Bin moves, shortcuts, app-data paths, single-instance checks, and elevation relaunches.
 
-`win-desktop-utils` is a thin layer over the Win32 and shell calls used for
-those tasks. Call the helpers directly, or use `DesktopApp` when startup needs
-an app identity, app-data directory, and single-instance guard.
+`win-desktop-utils` is a thin layer over the Win32 and shell calls used for those tasks.
+Call the helpers directly, or use `DesktopApp` when startup needs an app identity,
+app-data directory, and single-instance guard.
 
 Use it for:
 
@@ -46,8 +45,8 @@ The public API covers:
 - relaunch the current executable as administrator
 - launch arbitrary commands through shell verbs such as `open` or `runas`
 
-This crate is Windows-first. On non-Windows targets, the public API still
-compiles and operational helpers return `Error::Unsupported`.
+This crate is Windows-first. On non-Windows targets, the public API still compiles and
+operational helpers return `Error::Unsupported`.
 
 ## Installation
 
@@ -56,24 +55,24 @@ compiles and operational helpers return `Error::Unsupported`.
 win-desktop-utils = "0.5"
 ```
 
-Default features enable the full API. To use only part of the crate, disable
-defaults and opt into the modules you need:
+Default features enable the full API. To use only part of the crate, disable defaults
+and opt into the modules you need:
 
 ```toml
 [dependencies]
 win-desktop-utils = { version = "0.5", default-features = false, features = ["paths", "instance"] }
 ```
 
-For crates that only need these helpers in Windows-specific code, use a
-target-specific dependency:
+For crates that only need these helpers in Windows-specific code, use a target-specific
+dependency:
 
 ```toml
 [target.'cfg(windows)'.dependencies]
 win-desktop-utils = "0.5"
 ```
 
-For cross-platform crates that want the same public symbols available everywhere,
-use a normal dependency and handle `Error::Unsupported` on non-Windows targets.
+For cross-platform crates that want the same public symbols available everywhere, use a
+normal dependency and handle `Error::Unsupported` on non-Windows targets.
 
 ## Quick Start
 
@@ -98,16 +97,16 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 ## Pick The Right Helper
 
-| Need | Start with | Feature | Notes |
-| --- | --- | --- | --- |
-| App identity, app-data paths, and one-instance startup | `DesktopApp` | `app` | Keeps startup setup together |
-| Per-user config, cache, logs, or state folders | `ensure_local_app_data` / `ensure_roaming_app_data` | `paths` | Creates folders only when using `ensure_*` |
-| Current-session or global single-instance behavior | `single_instance` / `SingleInstanceOptions` | `instance` | Keep the guard alive |
-| Open files, URLs, folders, Properties, or print verbs | `open_with_default`, `open_url`, `open_with_verb` | `shell` | Uses user shell associations |
-| Show a file or folder in Explorer | `reveal_in_explorer` | `shell` | Starts `explorer.exe` |
-| Move files or folders to the Recycle Bin | `move_to_recycle_bin` / `move_paths_to_recycle_bin` | `recycle-bin` | Requires absolute existing paths without NUL bytes |
-| Create `.lnk` or `.url` shortcuts | `create_shortcut` / `create_url_shortcut` | `shortcuts` | Output parent must already be a directory |
-| Check or request administrator elevation | `is_elevated`, `restart_as_admin`, `run_as_admin` | `elevation` | May show UAC and starts another process |
+| Need                                                   | Start with                                          | Feature       | Notes                                              |
+| ------------------------------------------------------ | --------------------------------------------------- | ------------- | -------------------------------------------------- |
+| App identity, app-data paths, and one-instance startup | `DesktopApp`                                        | `app`         | Keeps startup setup together                       |
+| Per-user config, cache, logs, or state folders         | `ensure_local_app_data` / `ensure_roaming_app_data` | `paths`       | Creates folders only when using `ensure_*`         |
+| Current-session or global single-instance behavior     | `single_instance` / `SingleInstanceOptions`         | `instance`    | Keep the guard alive                               |
+| Open files, URLs, folders, Properties, or print verbs  | `open_with_default`, `open_url`, `open_with_verb`   | `shell`       | Uses user shell associations                       |
+| Show a file or folder in Explorer                      | `reveal_in_explorer`                                | `shell`       | Starts `explorer.exe`                              |
+| Move files or folders to the Recycle Bin               | `move_to_recycle_bin` / `move_paths_to_recycle_bin` | `recycle-bin` | Requires absolute existing paths without NUL bytes |
+| Create `.lnk` or `.url` shortcuts                      | `create_shortcut` / `create_url_shortcut`           | `shortcuts`   | Output parent must already be a directory          |
+| Check or request administrator elevation               | `is_elevated`, `restart_as_admin`, `run_as_admin`   | `elevation`   | May show UAC and starts another process            |
 
 ## Feature Flags
 
@@ -153,7 +152,8 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 ## Cookbook
 
-[`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md) has short examples for:
+[`docs/cookbook.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md)
+has short examples for:
 
 - starting a single-instance app
 - creating local and roaming app-data folders
@@ -164,20 +164,32 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 Additional guides:
 
-- [`docs/adoption.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md): integration notes for common app layouts
-- [`docs/feature-flags.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md): minimal dependency snippets by feature
-- [`docs/integrations.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md): framework and packaging integration sketches
-- [`docs/overhead.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md): runtime model, side costs, and dependency surface
-- [`docs/which-api.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md): pick the right helper for a task
-- [`docs/side-effects.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/side-effects.md): user-visible behavior and safety notes
-- [`docs/compatibility.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md): OS, Rust, feature, and non-Windows build policy
-- [`docs/design.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md): project scope and API acceptance rules
-- [`docs/testing.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md): test structure and expectations
-- [`docs/trust.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md): maintenance, compatibility, and release guarantees
+- [`docs/adoption.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md):
+  integration notes for common app layouts
+- [`docs/feature-flags.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md):
+  minimal dependency snippets by feature
+- [`docs/integrations.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md):
+  framework and packaging integration sketches
+- [`docs/overhead.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md):
+  runtime model, side costs, and dependency surface
+- [`docs/which-api.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md):
+  pick the right helper for a task
+- [`docs/side-effects.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/side-effects.md):
+  user-visible behavior and safety notes
+- [`docs/compatibility.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md):
+  OS, Rust, feature, and non-Windows build policy
+- [`docs/design.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md):
+  project scope and API acceptance rules
+- [`docs/testing.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md):
+  test structure and expectations
+- [`docs/trust.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md):
+  maintenance, compatibility, and release guarantees
 
 ## Examples
 
-The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/examples) directory includes runnable samples for:
+The
+[`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/examples)
+directory includes runnable samples for:
 
 - app-data path lookup and creation
 - URL opening and Explorer reveal helpers
@@ -191,12 +203,14 @@ The [`examples/`](https://github.com/funwithcthulhu/win-desktop-utils/tree/main/
 - builder-style single-instance options
 - `DesktopApp` startup flow
 
-See [`examples/README.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/examples/README.md) for expected behavior, side effects, and feature flags for each example.
+See
+[`examples/README.md`](https://github.com/funwithcthulhu/win-desktop-utils/blob/main/examples/README.md)
+for expected behavior, side effects, and feature flags for each example.
 
 The companion demo app is
 [`funwithcthulhu/win-desktop-utils-demo`](https://github.com/funwithcthulhu/win-desktop-utils-demo).
-It wires `DesktopApp`, app-data setup, single-instance startup, shell opening,
-Explorer reveal, elevation checks, and shortcut creation into one small binary.
+It wires `DesktopApp`, app-data setup, single-instance startup, shell opening, Explorer
+reveal, elevation checks, and shortcut creation into one small binary.
 
 Run any example with:
 
@@ -206,8 +220,8 @@ cargo run --example single_instance
 
 ## Error behavior
 
-Errors use the crate's `Error` enum. Path validation gets distinct variants
-where callers can act on the failure.
+Errors use the crate's `Error` enum. Path validation gets distinct variants where
+callers can act on the failure.
 
 Notable error distinctions include:
 
@@ -221,26 +235,44 @@ Notable error distinctions include:
 ## Behavior notes
 
 - `open_with_default` requires a non-empty existing path without NUL bytes.
-- `open_with_verb` requires a non-empty existing path without NUL bytes and a non-empty shell verb such as `open` or `properties`.
+- `open_with_verb` requires a non-empty existing path without NUL bytes and a non-empty
+  shell verb such as `open` or `properties`.
 - `show_properties` and `print_with_default` are convenience wrappers over shell verbs.
 - `open_url` trims surrounding whitespace before delegating to the Windows shell.
-- `reveal_in_explorer` requires an existing path without NUL bytes and launches `explorer.exe`.
-- `open_containing_folder` requires an existing path without NUL bytes and opens its parent directory.
-- `move_to_recycle_bin` requires an absolute existing path without NUL bytes and uses `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
-- `move_paths_to_recycle_bin` validates every path before starting one recycle-bin shell operation.
-- `empty_recycle_bin` and `empty_recycle_bin_for_root` permanently empty Recycle Bin contents without showing shell UI.
-- `create_shortcut` requires an absolute `.lnk` path, an existing output parent directory, and an existing absolute target path without NUL bytes.
-- `create_url_shortcut` requires an absolute `.url` path whose parent is an existing directory and rejects line breaks in URLs to avoid malformed shortcut files.
-- `roaming_app_data` and `local_app_data` reject empty, whitespace-only, or NUL-containing app names, then resolve the base directory via `SHGetKnownFolderPath`.
-- `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current Windows session.
-- `single_instance_with_scope` can opt into either the current-session (`Local\...`) or global (`Global\...`) namespace.
-- `SingleInstanceOptions` provides a small builder around single-instance app ID and scope selection.
-- `single_instance` rejects backslashes in `app_id` because Windows reserves them for kernel-object namespaces such as `Local\` and `Global\`.
-- Keep the returned `InstanceGuard` alive for as long as the process should own the single-instance lock.
-- `restart_as_admin` starts a new elevated instance of the current executable and does not terminate the current process.
-- `run_as_admin` starts an arbitrary command with the `runas` shell verb and may trigger UAC.
-- `restart_as_admin`, `run_as_admin`, and `run_with_verb` reject arguments containing NUL bytes.
-- On non-Windows targets, public APIs compile and Windows operations return `Error::Unsupported`.
+- `reveal_in_explorer` requires an existing path without NUL bytes and launches
+  `explorer.exe`.
+- `open_containing_folder` requires an existing path without NUL bytes and opens its
+  parent directory.
+- `move_to_recycle_bin` requires an absolute existing path without NUL bytes and uses
+  `IFileOperation` on a dedicated STA thread for recycle-bin behavior.
+- `move_paths_to_recycle_bin` validates every path before starting one recycle-bin shell
+  operation.
+- `empty_recycle_bin` and `empty_recycle_bin_for_root` permanently empty Recycle Bin
+  contents without showing shell UI.
+- `create_shortcut` requires an absolute `.lnk` path, an existing output parent
+  directory, and an existing absolute target path without NUL bytes.
+- `create_url_shortcut` requires an absolute `.url` path whose parent is an existing
+  directory and rejects line breaks in URLs to avoid malformed shortcut files.
+- `roaming_app_data` and `local_app_data` reject empty, whitespace-only, or
+  NUL-containing app names, then resolve the base directory via `SHGetKnownFolderPath`.
+- `single_instance` uses a `Local\...` named mutex, so the lock is scoped to the current
+  Windows session.
+- `single_instance_with_scope` can opt into either the current-session (`Local\...`) or
+  global (`Global\...`) namespace.
+- `SingleInstanceOptions` provides a small builder around single-instance app ID and
+  scope selection.
+- `single_instance` rejects backslashes in `app_id` because Windows reserves them for
+  kernel-object namespaces such as `Local\` and `Global\`.
+- Keep the returned `InstanceGuard` alive for as long as the process should own the
+  single-instance lock.
+- `restart_as_admin` starts a new elevated instance of the current executable and does
+  not terminate the current process.
+- `run_as_admin` starts an arbitrary command with the `runas` shell verb and may trigger
+  UAC.
+- `restart_as_admin`, `run_as_admin`, and `run_with_verb` reject arguments containing
+  NUL bytes.
+- On non-Windows targets, public APIs compile and Windows operations return
+  `Error::Unsupported`.
 
 ## Quality
 
@@ -254,14 +286,15 @@ CI and `xtask` check:
 - `cargo xtask` automation for docs, feature, package, and release checks
 - `cargo xtask release-audit` checks for release metadata and package contents
 - ignored manual Windows smoke tests available through `cargo xtask smoke`
-- Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, doctests, docs, feature combinations, packaging, dependency policy, and semver checks
+- Windows CI via GitHub Actions for MSRV, formatting, tests, clippy, examples, doctests,
+  docs, feature combinations, packaging, dependency policy, and semver checks
 - non-Windows CI checks that the public API stubs compile and return unsupported errors
 - scheduled CI to catch dependency, runner, and toolchain drift
 - documentation link checks for local Markdown links
 - docs published on docs.rs
 
-The minimum supported Rust version is `1.82`, matching the current `windows`
-crate dependency floor.
+The minimum supported Rust version is `1.82`, matching the current `windows` crate
+dependency floor.
 
 ## Support Policy
 
@@ -269,7 +302,8 @@ crate dependency floor.
 - Non-Windows targets compile public API stubs that return `Error::Unsupported`.
 - Supported Rust: 1.82 and newer.
 - Public API compatibility is checked with `cargo-semver-checks`.
-- Dependency advisories, licenses, duplicate versions, and sources are checked with `cargo-deny`.
+- Dependency advisories, licenses, duplicate versions, and sources are checked with
+  `cargo-deny`.
 
 ## Links
 
@@ -277,15 +311,25 @@ crate dependency floor.
 - Docs: https://docs.rs/win-desktop-utils
 - Repository: https://github.com/funwithcthulhu/win-desktop-utils
 - Changelog: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/CHANGELOG.md
-- Cookbook: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md
-- API guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md
-- Adoption notes: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md
-- Compatibility: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md
-- Design contract: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md
-- Feature flags: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md
-- Integrations: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md
+- Cookbook:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/cookbook.md
+- API guide:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/which-api.md
+- Adoption notes:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/adoption.md
+- Compatibility:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/compatibility.md
+- Design contract:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/design.md
+- Feature flags:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/feature-flags.md
+- Integrations:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/integrations.md
 - Demo app: https://github.com/funwithcthulhu/win-desktop-utils-demo
-- Runtime overhead: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md
-- Testing guide: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md
-- Maintenance policy: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md
+- Runtime overhead:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/overhead.md
+- Testing guide:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/testing.md
+- Maintenance policy:
+  https://github.com/funwithcthulhu/win-desktop-utils/blob/main/docs/trust.md
 - Roadmap: https://github.com/funwithcthulhu/win-desktop-utils/blob/main/ROADMAP.md

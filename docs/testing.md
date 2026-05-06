@@ -23,8 +23,8 @@ New public APIs should include tests for:
 - non-Windows `Error::Unsupported` behavior
 - one side-effect-free success path, when practical
 
-If an API starts another process or shows shell UI, prefer `no_run` docs and
-validation tests over CI tests that open windows.
+If an API starts another process or shows shell UI, prefer `no_run` docs and validation
+tests over CI tests that open windows.
 
 ## Local Commands
 
@@ -50,9 +50,9 @@ For manual Windows desktop smoke coverage, run:
 cargo xtask smoke
 ```
 
-This runs ignored tests in `tests/smoke.rs` for contained desktop behavior such
-as shortcut creation, Recycle Bin moves, and elevation-state checks. Tests that
-open Explorer, open a browser, or trigger UAC require explicit opt-in:
+This runs ignored tests in `tests/smoke.rs` for contained desktop behavior such as
+shortcut creation, Recycle Bin moves, and elevation-state checks. Tests that open
+Explorer, open a browser, or trigger UAC require explicit opt-in:
 
 ```powershell
 $env:WIN_DESKTOP_UTILS_SMOKE_UI='1'
@@ -64,8 +64,8 @@ cargo xtask smoke
 
 ## CI Coverage
 
-Windows CI runs formatting, tests, clippy, examples, docs, no-default feature
-checks, single-feature checks, pairwise feature checks, packaging, dependency
-policy, semver checks, and release metadata audits. Linux CI checks that the
-non-Windows stubs compile, test, and lint with all features. Scheduled CI runs
-weekly to catch toolchain, runner, and dependency drift.
+Windows CI runs formatting, tests, clippy, examples, docs, no-default feature checks,
+single-feature checks, pairwise feature checks, packaging, dependency policy, semver
+checks, and release metadata audits. Linux CI checks that the non-Windows stubs compile,
+test, and lint with all features. Scheduled CI runs weekly to catch toolchain, runner,
+and dependency drift.

@@ -1,7 +1,7 @@
 # Roadmap
 
-This project is intentionally small: practical Windows desktop helpers with
-clear behavior, validation, examples, and docs.
+This project is intentionally small: practical Windows desktop helpers with clear
+behavior, validation, examples, and docs.
 
 ## Current Focus
 
@@ -10,8 +10,8 @@ clear behavior, validation, examples, and docs.
 - Preserve a low dependency surface through feature flags.
 - Keep MSRV and public API compatibility checked in CI.
 - Keep release metadata, package contents, and manual smoke coverage easy to audit.
-- Make cross-platform consumers able to type-check the public API, while keeping
-  Windows behavior explicit.
+- Make cross-platform consumers able to type-check the public API, while keeping Windows
+  behavior explicit.
 
 ## Candidate Improvements
 

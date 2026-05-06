@@ -22,7 +22,8 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 ## Create Local App Data
 
-Use local app data for machine-local cache, logs, downloaded assets, and settings that should not roam.
+Use local app data for machine-local cache, logs, downloaded assets, and settings that
+should not roam.
 
 ```rust
 let app = win_desktop_utils::DesktopApp::with_company("Acme", "Editor")?;
@@ -144,8 +145,8 @@ target-specific:
 win-desktop-utils = "0.5"
 ```
 
-If you want the public symbols to type-check on every target, keep a normal
-dependency and handle `Error::Unsupported` when running outside Windows:
+If you want the public symbols to type-check on every target, keep a normal dependency
+and handle `Error::Unsupported` when running outside Windows:
 
 ```rust
 match win_desktop_utils::open_url("https://www.rust-lang.org") {

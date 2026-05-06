@@ -1,7 +1,7 @@
 # Maintenance
 
-This crate is small on purpose. Its main promise is not broad Windows coverage;
-it is documented behavior for the interactive desktop tasks it supports.
+This crate is small on purpose. Its main promise is not broad Windows coverage; it is
+documented behavior for the interactive desktop tasks it supports.
 
 ## Compatibility Contract
 
@@ -44,8 +44,8 @@ GitHub Actions checks:
 - public API semver compatibility
 - non-Windows stub compilation, tests, and linting
 
-CI also runs on a weekly schedule so dependency, runner, and toolchain drift is
-caught even when no code changes are active.
+CI also runs on a weekly schedule so dependency, runner, and toolchain drift is caught
+even when no code changes are active.
 
 ## Local Release Gates
 
@@ -57,8 +57,8 @@ caught even when no code changes are active.
 - README install snippets for the current minor line
 - package contents for files that should not ship to crates.io
 
-After publishing, the release checklist includes a docs.rs version-page check so
-the published API docs are confirmed, not merely assumed.
+After publishing, the release checklist includes a docs.rs version-page check so the
+published API docs are confirmed, not merely assumed.
 
 Manual desktop behavior can be checked with:
 
@@ -67,17 +67,16 @@ cargo xtask smoke
 ```
 
 The smoke command runs ignored Windows desktop tests for shortcuts, Recycle Bin
-behavior, and elevation state. UI-opening checks are opt-in with environment
-variables so automated runs do not unexpectedly open windows or UAC prompts.
+behavior, and elevation state. UI-opening checks are opt-in with environment variables
+so automated runs do not unexpectedly open windows or UAC prompts.
 
-See [`overhead.md`](overhead.md) for the runtime model and dependency-surface
-notes.
+See [`overhead.md`](overhead.md) for the runtime model and dependency-surface notes.
 
 ## What Is Not Guaranteed
 
-This crate does not guarantee that a user's installed shell handlers support a
-given verb, that Explorer is available in every account/session model, or that
-service and scheduled-task environments behave like an interactive desktop. It
-also does not own installer, updater, GUI framework, or package-manager policy.
+This crate does not guarantee that a user's installed shell handlers support a given
+verb, that Explorer is available in every account/session model, or that service and
+scheduled-task environments behave like an interactive desktop. It also does not own
+installer, updater, GUI framework, or package-manager policy.
 
 When an application needs lower-level control, use the `windows` crate directly.

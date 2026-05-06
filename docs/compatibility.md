@@ -1,8 +1,7 @@
 # Compatibility
 
-`win-desktop-utils` is Windows-first. It is intended for interactive Windows
-desktop apps, tray apps, GUI utilities, installer-adjacent tools, and local
-developer utilities.
+`win-desktop-utils` is Windows-first. It is intended for interactive Windows desktop
+apps, tray apps, GUI utilities, installer-adjacent tools, and local developer utilities.
 
 ## Operating Systems
 
@@ -11,8 +10,8 @@ Primary support targets:
 - Windows 10
 - Windows 11
 
-The crate uses ordinary Win32 shell, COM, known-folder, mutex, and elevation APIs
-that are expected to exist on supported desktop Windows versions.
+The crate uses ordinary Win32 shell, COM, known-folder, mutex, and elevation APIs that
+are expected to exist on supported desktop Windows versions.
 
 ## Rust Version
 
@@ -32,19 +31,18 @@ Non-Windows targets compile the public API as stubs. Operational helpers return:
 Err(win_desktop_utils::Error::Unsupported(_))
 ```
 
-This helps libraries and cross-platform applications type-check code paths that
-are only exercised on Windows.
+This helps libraries and cross-platform applications type-check code paths that are only
+exercised on Windows.
 
-If your code only needs the crate on Windows, prefer a target-specific
-dependency:
+If your code only needs the crate on Windows, prefer a target-specific dependency:
 
 ```toml
 [target.'cfg(windows)'.dependencies]
 win-desktop-utils = "0.5"
 ```
 
-If your code wants the same public symbols available on every target, use a
-normal dependency:
+If your code wants the same public symbols available on every target, use a normal
+dependency:
 
 ```toml
 [dependencies]
@@ -53,8 +51,8 @@ win-desktop-utils = "0.5"
 
 ## Feature Flags
 
-Default features enable the full API. For smaller dependency surfaces, disable
-defaults and opt into the groups you need:
+Default features enable the full API. For smaller dependency surfaces, disable defaults
+and opt into the groups you need:
 
 ```toml
 [dependencies]
@@ -82,19 +80,18 @@ published Rust documentation.
 
 Some APIs depend on interactive Windows desktop state:
 
-- Shell verbs and URL opening depend on user file associations and registered
-  handlers.
+- Shell verbs and URL opening depend on user file associations and registered handlers.
 - Explorer reveal helpers require Explorer to be available.
 - Elevation helpers may show UAC prompts.
 - Known-folder helpers resolve paths for the current user.
 - Global mutexes can be affected by policy or permissions.
 
-These workflows can behave differently in services, scheduled tasks, CI,
-containers, remote sessions, or Session 0.
+These workflows can behave differently in services, scheduled tasks, CI, containers,
+remote sessions, or Session 0.
 
 ## Package Formats
 
-The crate does not currently provide package-format-specific helpers for MSIX,
-MSI, NSIS, WiX, Squirrel, or portable app layouts. The APIs can still be useful
-inside apps shipped by those systems, but installation, registration, and update
-policy remain the responsibility of the application or installer.
+The crate does not currently provide package-format-specific helpers for MSIX, MSI,
+NSIS, WiX, Squirrel, or portable app layouts. The APIs can still be useful inside apps
+shipped by those systems, but installation, registration, and update policy remain the
+responsibility of the application or installer.

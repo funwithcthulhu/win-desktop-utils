@@ -2,7 +2,8 @@
 
 Use this checklist before publishing a new `win-desktop-utils` release.
 
-1. Update `Cargo.toml`, `Cargo.lock`, `README.md`, and `CHANGELOG.md` for the new version.
+1. Update `Cargo.toml`, `Cargo.lock`, `README.md`, and `CHANGELOG.md` for the new
+   version.
 2. Run the local verification suite:
 
    ```powershell
@@ -42,8 +43,10 @@ Use this checklist before publishing a new `win-desktop-utils` release.
    git push origin vX.Y.Z
    ```
 
-8. Create a GitHub release for the tag with a short change summary and verification list.
-9. Confirm crates.io, docs.rs, the GitHub release, and GitHub Actions all reflect the new version.
+8. Create a GitHub release for the tag with a short change summary and verification
+   list.
+9. Confirm crates.io, docs.rs, the GitHub release, and GitHub Actions all reflect the
+   new version.
 
    Useful checks:
 
@@ -53,5 +56,5 @@ Use this checklist before publishing a new `win-desktop-utils` release.
    ```
 
    Open the versioned docs.rs page for the release, for example
-   `https://docs.rs/win-desktop-utils/X.Y.Z/win_desktop_utils/`, and confirm it
-   built successfully for the published version.
+   `https://docs.rs/win-desktop-utils/X.Y.Z/win_desktop_utils/`, and confirm it built
+   successfully for the published version.

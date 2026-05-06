@@ -1,14 +1,14 @@
 # Adoption Notes
 
-These examples show where `win-desktop-utils` usually fits in application
-layouts. They are integration notes, not new feature proposals.
+These examples show where `win-desktop-utils` usually fits in application layouts. They
+are integration notes, not new feature proposals.
 
 For framework-specific startup sketches, see [`integrations.md`](integrations.md).
 
 ## Cross-Platform Application Layout
 
-Keep Windows desktop behavior in a Windows-only module when the rest of the app
-is cross-platform:
+Keep Windows desktop behavior in a Windows-only module when the rest of the app is
+cross-platform:
 
 ```rust
 #[cfg(windows)]
@@ -34,8 +34,8 @@ win-desktop-utils = "0.5"
 
 ## Tauri Startup
 
-Use `DesktopApp` before or during the app setup hook. Keep the returned
-`InstanceGuard` in application state for the lifetime of the process.
+Use `DesktopApp` before or during the app setup hook. Keep the returned `InstanceGuard`
+in application state for the lifetime of the process.
 
 ```rust,no_run
 fn prepare_startup() -> Result<Option<win_desktop_utils::InstanceGuard>, win_desktop_utils::Error> {
@@ -45,13 +45,13 @@ fn prepare_startup() -> Result<Option<win_desktop_utils::InstanceGuard>, win_des
 }
 ```
 
-Handle `Ok(None)` with your app's own policy: show a message, exit quietly, or
-signal the existing instance.
+Handle `Ok(None)` with your app's own policy: show a message, exit quietly, or signal
+the existing instance.
 
 ## eframe/egui Startup
 
-Acquire the single-instance guard before starting the GUI event loop, then keep
-it alive beside your app state:
+Acquire the single-instance guard before starting the GUI event loop, then keep it alive
+beside your app state:
 
 ```rust,no_run
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -103,6 +103,6 @@ Use `create_shortcut` when:
 
 ## Service And Scheduled Task Code
 
-This crate targets interactive desktop behavior. For services and scheduled
-tasks, avoid shell UI and Explorer helpers unless you have tested the exact
-session and account model. See [`side-effects.md`](side-effects.md) for details.
+This crate targets interactive desktop behavior. For services and scheduled tasks, avoid
+shell UI and Explorer helpers unless you have tested the exact session and account
+model. See [`side-effects.md`](side-effects.md) for details.

@@ -2,16 +2,16 @@
 
 `win-desktop-utils` should stay small, explicit, and auditable.
 
-This document is the bar for future changes. It exists so the crate can improve
-without becoming a grab bag of Windows APIs.
+This document is the bar for future changes. It exists so the crate can improve without
+becoming a grab bag of Windows APIs.
 
 ## What This Crate Is
 
 - A helper crate for interactive Windows desktop app workflows.
-- A validation layer around shell, shortcut, app-data, single-instance, Recycle
-  Bin, and elevation tasks.
-- A crate that exposes Rust APIs with explicit errors and side effects instead
-  of raw Win32 types.
+- A validation layer around shell, shortcut, app-data, single-instance, Recycle Bin, and
+  elevation tasks.
+- A crate that exposes Rust APIs with explicit errors and side effects instead of raw
+  Win32 types.
 - A Windows-first crate with non-Windows stubs for cross-platform type-checking.
 
 ## What This Crate Is Not
@@ -53,10 +53,10 @@ The crate should not hide these behaviors behind vague helper names.
 
 - Keep runtime dependencies minimal.
 - Keep Windows bindings behind feature flags.
-- Keep Windows bindings target-specific so non-Windows builds do not compile
-  Win32 crates unnecessarily.
-- Prefer standard library helpers for project tooling unless a dependency earns
-  its weight.
+- Keep Windows bindings target-specific so non-Windows builds do not compile Win32
+  crates unnecessarily.
+- Prefer standard library helpers for project tooling unless a dependency earns its
+  weight.
 
 ## Documentation Rules
 
@@ -67,8 +67,8 @@ Every public API should have:
 - side-effect notes when relevant
 - a doctest or `no_run` example when practical
 
-Broader behavior should live in separate Markdown docs rather than in long
-README sections. The README should route users to the right guide.
+Broader behavior should live in separate Markdown docs rather than in long README
+sections. The README should route users to the right guide.
 
 ## Release Rules
 

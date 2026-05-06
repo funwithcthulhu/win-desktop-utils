@@ -16,7 +16,8 @@ Good fits include:
 - elevation helpers
 - documentation, examples, tests, CI, and release automation
 
-Please avoid broad framework features or unrelated Windows APIs unless there is a clear desktop app workflow behind them.
+Please avoid broad framework features or unrelated Windows APIs unless there is a clear
+desktop app workflow behind them.
 
 ## Local Checks
 
@@ -46,9 +47,9 @@ For manual Windows desktop behavior, run:
 cargo xtask smoke
 ```
 
-The smoke command is intentionally ignored by default test runs because some
-checks can touch the desktop shell. See [`docs/testing.md`](docs/testing.md) for
-UI and elevation opt-in variables.
+The smoke command is intentionally ignored by default test runs because some checks can
+touch the desktop shell. See [`docs/testing.md`](docs/testing.md) for UI and elevation
+opt-in variables.
 
 `cargo xtask feature-check` covers the empty feature set, every individual public
 feature, and every pairwise public feature combination.
@@ -84,8 +85,8 @@ A new API should have:
 - non-Windows stub behavior returning `Error::Unsupported`
 - an example when users are likely to copy the workflow
 
-APIs that only expose another Win32 call without a common workflow are usually
-outside this crate's scope.
+APIs that only expose another Win32 call without a common workflow are usually outside
+this crate's scope.
 
 ## MSRV
 
@@ -99,8 +100,10 @@ working on Windows.
 
 ## Release Notes
 
-User-visible changes should be added to `CHANGELOG.md`. Release steps live in `RELEASE.md`.
+User-visible changes should be added to `CHANGELOG.md`. Release steps live in
+`RELEASE.md`.
 
 ## Conduct
 
-By participating, you agree to follow the project [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+By participating, you agree to follow the project
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).

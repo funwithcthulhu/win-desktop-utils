@@ -1,7 +1,7 @@
 # Feature Flags
 
-Default features enable the full public API. For smaller dependency surfaces,
-disable defaults and opt into only the workflow groups your app uses.
+Default features enable the full public API. For smaller dependency surfaces, disable
+defaults and opt into only the workflow groups your app uses.
 
 ## Full API
 
@@ -21,8 +21,8 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 ## `app`
 
-Use `app` when startup code wants app identity, app-data paths, and
-single-instance configuration in one place.
+Use `app` when startup code wants app identity, app-data paths, and single-instance
+configuration in one place.
 
 ```toml
 [dependencies]
@@ -81,8 +81,7 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 
 ## `shell`
 
-Use `shell` for opening files, folders, URLs, Explorer selections, and shell
-verbs.
+Use `shell` for opening files, folders, URLs, Explorer selections, and shell verbs.
 
 ```toml
 [dependencies]
@@ -169,8 +168,8 @@ Use a target-specific dependency when only Windows code calls the helpers:
 win-desktop-utils = "0.5"
 ```
 
-Use a normal dependency when shared code wants the public API to type-check on
-every target:
+Use a normal dependency when shared code wants the public API to type-check on every
+target:
 
 ```toml
 [dependencies]

@@ -1,8 +1,7 @@
 # Integration Notes
 
-These notes show where `win-desktop-utils` usually sits inside application
-startup code. They are startup examples, not proposals to add framework-specific
-APIs to this crate.
+These notes show where `win-desktop-utils` usually sits inside application startup code.
+They are startup examples, not proposals to add framework-specific APIs to this crate.
 
 ## General Pattern
 
@@ -37,8 +36,8 @@ fn prepare_desktop() -> Result<Option<DesktopState>, win_desktop_utils::Error> {
 
 ## Dependency Shape
 
-Use the default feature set when application startup, shell actions, shortcuts,
-and elevation all live in one app crate:
+Use the default feature set when application startup, shell actions, shortcuts, and
+elevation all live in one app crate:
 
 ```toml
 [dependencies]
@@ -54,9 +53,8 @@ win-desktop-utils = { version = "0.5", default-features = false, features = ["ap
 
 ## Tauri
 
-Prepare desktop state before `run`. Keep the guard in a local binding that
-lives until `run` returns, and manage only the paths or lightweight state Tauri
-commands need.
+Prepare desktop state before `run`. Keep the guard in a local binding that lives until
+`run` returns, and manage only the paths or lightweight state Tauri commands need.
 
 ```rust,no_run
 struct AppPaths {
@@ -96,8 +94,8 @@ fn open_docs() -> Result<(), String> {
 
 ## eframe Or egui
 
-Acquire the guard before `run_native`, then move it into the app struct or hold
-it beside the app state.
+Acquire the guard before `run_native`, then move it into the app struct or hold it
+beside the app state.
 
 ```rust,no_run
 struct AppState {
@@ -118,8 +116,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## iced
 
-Prepare desktop state before launching the application, then keep the guard in
-your application model.
+Prepare desktop state before launching the application, then keep the guard in your
+application model.
 
 ```rust,no_run
 struct Model {
@@ -139,8 +137,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Slint
 
-Resolve desktop state before creating the main window. Keep the guard in Rust
-state that lives at least as long as the UI.
+Resolve desktop state before creating the main window. Keep the guard in Rust state that
+lives at least as long as the UI.
 
 ```rust,no_run
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -156,8 +154,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Tray Apps
 
-Tray apps often have no obvious main window, so single-instance behavior and a
-known local data directory are usually startup concerns.
+Tray apps often have no obvious main window, so single-instance behavior and a known
+local data directory are usually startup concerns.
 
 ```rust,no_run
 fn main() -> Result<(), win_desktop_utils::Error> {
@@ -174,25 +172,24 @@ fn main() -> Result<(), win_desktop_utils::Error> {
 }
 ```
 
-Use `open_containing_folder`, `open_url`, or `show_properties` from tray menu
-callbacks only after the user explicitly asks for those shell actions.
+Use `open_containing_folder`, `open_url`, or `show_properties` from tray menu callbacks
+only after the user explicitly asks for those shell actions.
 
 ## Portable Apps
 
-Portable apps can still use this crate for user-driven shell behavior such as
-opening folders, creating shortcuts in user-selected locations, or enforcing a
-single running instance. Be careful with app-data helpers if your app promises
-not to write outside its portable directory.
+Portable apps can still use this crate for user-driven shell behavior such as opening
+folders, creating shortcuts in user-selected locations, or enforcing a single running
+instance. Be careful with app-data helpers if your app promises not to write outside its
+portable directory.
 
 ## Installer-Adjacent Code
 
-Prefer installer-owned shortcuts for Start Menu and Desktop entries created at
-install time. Use `create_shortcut` from the app when the user chooses a
-shortcut location or when the shortcut belongs to user data rather than install
-state.
+Prefer installer-owned shortcuts for Start Menu and Desktop entries created at install
+time. Use `create_shortcut` from the app when the user chooses a shortcut location or
+when the shortcut belongs to user data rather than install state.
 
-For small installer-adjacent command-line helpers, keep shell side effects behind
-clear subcommands:
+For small installer-adjacent command-line helpers, keep shell side effects behind clear
+subcommands:
 
 ```rust,no_run
 fn create_docs_shortcut(shortcut: std::path::PathBuf) -> win_desktop_utils::Result<()> {
@@ -212,8 +209,8 @@ Use a Windows-only dependency when only Windows code calls the helpers:
 win-desktop-utils = "0.5"
 ```
 
-Use a normal dependency when shared code wants the public symbols to type-check
-on every target:
+Use a normal dependency when shared code wants the public symbols to type-check on every
+target:
 
 ```toml
 [dependencies]
