@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 use std::ffi::OsStr;
 
 use win_desktop_utils::{

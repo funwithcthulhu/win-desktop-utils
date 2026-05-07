@@ -38,6 +38,7 @@
 //! # Quick Start
 //!
 //! ```
+//! # #[cfg(feature = "app")]
 //! fn main() -> Result<(), win_desktop_utils::Error> {
 //!     let app = win_desktop_utils::DesktopApp::new(format!(
 //!         "demo-app-{}",
@@ -57,6 +58,8 @@
 //!
 //!     Ok(())
 //! }
+//! # #[cfg(not(feature = "app"))]
+//! # fn main() {}
 //! ```
 //!
 //! # Feature Flags
@@ -97,6 +100,8 @@
 //! Startup guard plus app-data directory:
 //!
 //! ```
+//! # #[cfg(feature = "app")]
+//! # {
 //! let app = win_desktop_utils::DesktopApp::new(format!(
 //!     "workflow-demo-{}",
 //!     std::process::id()
@@ -104,27 +109,34 @@
 //! let _guard = app.single_instance()?.expect("first instance");
 //! let config_dir = app.ensure_local_data_dir()?;
 //! assert!(config_dir.exists());
+//! # }
 //! # Ok::<(), win_desktop_utils::Error>(())
 //! ```
 //!
 //! Create a shortcut:
 //!
 //! ```no_run
+//! # #[cfg(feature = "shortcuts")]
+//! # {
 //! let shortcut = std::env::current_dir()?.join("notepad.lnk");
 //! let options = win_desktop_utils::ShortcutOptions::new()
 //!     .description("Open Notepad");
 //! win_desktop_utils::create_shortcut(&shortcut, r"C:\Windows\notepad.exe", &options)?;
+//! # }
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
 //! Relaunch the current executable as administrator:
 //!
 //! ```no_run
+//! # #[cfg(feature = "elevation")]
+//! # {
 //! use std::ffi::OsString;
 //!
 //! if !win_desktop_utils::is_elevated()? {
 //!     win_desktop_utils::restart_as_admin(&[OsString::from("--elevated")])?;
 //! }
+//! # }
 //! # Ok::<(), win_desktop_utils::Error>(())
 //! ```
 //!

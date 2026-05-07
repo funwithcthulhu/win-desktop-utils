@@ -1,3 +1,5 @@
+#![cfg(windows)]
+
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};

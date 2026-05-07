@@ -49,6 +49,93 @@ recycle-bin = ["dep:windows"]
 shell = ["dep:windows"]
 shortcuts = ["dep:windows"]
 
+[[example]]
+name = "desktop_app"
+required-features = ["app", "shortcuts"]
+
+[[example]]
+name = "ensure_paths"
+required-features = ["paths"]
+
+[[example]]
+name = "is_elevated"
+required-features = ["elevation"]
+
+[[example]]
+name = "open"
+required-features = ["shell"]
+
+[[example]]
+name = "paths"
+required-features = ["paths"]
+
+[[example]]
+name = "recycle_bin"
+required-features = ["recycle-bin"]
+
+[[example]]
+name = "restart_as_admin"
+required-features = ["elevation"]
+
+[[example]]
+name = "reveal"
+required-features = ["shell"]
+
+[[example]]
+name = "run_with_verb"
+required-features = ["elevation"]
+
+[[example]]
+name = "shortcuts"
+required-features = ["shortcuts"]
+
+[[example]]
+name = "single_instance"
+required-features = ["instance"]
+
+[[example]]
+name = "single_instance_global"
+required-features = ["instance"]
+
+[[example]]
+name = "single_instance_options"
+required-features = ["instance"]
+
+[[test]]
+name = "api_validation"
+required-features = [
+    "elevation",
+    "instance",
+    "recycle-bin",
+    "shell",
+    "shortcuts",
+]
+
+[[test]]
+name = "basic"
+required-features = ["paths"]
+
+[[test]]
+name = "non_windows_unsupported"
+required-features = [
+    "app",
+    "elevation",
+    "instance",
+    "paths",
+    "recycle-bin",
+    "shell",
+    "shortcuts",
+]
+
+[[test]]
+name = "smoke"
+required-features = [
+    "elevation",
+    "recycle-bin",
+    "shell",
+    "shortcuts",
+]
+
 [target.'cfg(windows)'.dependencies.windows]
 version = "0.62.2"
 optional = true
