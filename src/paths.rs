@@ -1,4 +1,7 @@
 //! Helpers for resolving and creating per-user application data directories.
+//!
+//! Direct helpers return the app-specific path without creating it. `ensure_*`
+//! helpers create the directory with `std::fs::create_dir_all`.
 
 use std::ffi::OsString;
 use std::fs;

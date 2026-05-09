@@ -1,6 +1,7 @@
 #![cfg(windows)]
 
 use std::ffi::OsStr;
+use std::path::Path;
 
 use win_desktop_utils::{
     ensure_local_app_data, ensure_roaming_app_data, local_app_data, roaming_app_data, Error,
@@ -16,6 +17,17 @@ fn unique_app_name(prefix: &str) -> String {
         "win-desktop-utils-test-{prefix}-{}-{unique}",
         std::process::id()
     )
+}
+
+fn assert_app_data_path_shape(path: &Path, app_name: &str) {
+    assert!(path.is_absolute());
+    assert_eq!(path.file_name(), Some(OsStr::new(app_name)));
+
+    let parent = path
+        .parent()
+        .expect("app-data path should have a known-folder parent");
+    assert!(parent.exists());
+    assert!(parent.is_dir());
 }
 
 #[test]
@@ -54,6 +66,24 @@ fn local_app_data_appends_app_name() {
     let app_name = unique_app_name("local");
     let path = local_app_data(&app_name).unwrap();
     assert_eq!(path.file_name(), Some(OsStr::new(&app_name)));
+}
+
+#[test]
+fn roaming_app_data_returns_absolute_child_path_without_creating_it() {
+    let app_name = unique_app_name("roaming-shape");
+    let path = roaming_app_data(&app_name).unwrap();
+
+    assert_app_data_path_shape(&path, &app_name);
+    assert!(!path.exists());
+}
+
+#[test]
+fn local_app_data_returns_absolute_child_path_without_creating_it() {
+    let app_name = unique_app_name("local-shape");
+    let path = local_app_data(&app_name).unwrap();
+
+    assert_app_data_path_shape(&path, &app_name);
+    assert!(!path.exists());
 }
 
 #[test]

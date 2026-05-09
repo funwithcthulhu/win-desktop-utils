@@ -65,6 +65,8 @@ App-data helpers resolve Windows known folders for the current user.
   settings.
 - Roaming app data is a good fit for small user preferences that may roam with a domain
   profile.
+- `local_app_data` and `roaming_app_data` only resolve paths; they do not create the
+  app directory.
 - Direct app-data helpers reject empty, whitespace-only, or NUL-containing app names.
 - `ensure_*` helpers create directories with `std::fs::create_dir_all`.
 
