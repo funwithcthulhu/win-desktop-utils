@@ -15,12 +15,12 @@ cargo run --example single_instance
 | ---------------------------- | ------------- | ------------------------------------------------------------------ |
 | `desktop_app.rs`             | `app`         | Creates app-data directories and acquires a single-instance guard. |
 | `ensure_paths.rs`            | `paths`       | Creates local and roaming app-data directories.                    |
-| `paths.rs`                   | `paths`       | Resolves local and roaming app-data paths without opening UI.      |
-| `single_instance.rs`         | `instance`    | Acquires a current-session single-instance mutex.                  |
+| `paths.rs`                   | `paths`       | Resolves local and roaming app-data paths without creating them.   |
+| `single_instance.rs`         | `instance`    | Checks a current-session single-instance mutex and exits.          |
 | `single_instance_global.rs`  | `instance`    | Acquires a global single-instance mutex.                           |
 | `single_instance_options.rs` | `instance`    | Shows builder-style single-instance configuration.                 |
-| `open.rs`                    | `shell`       | Opens URLs, files, or folders through the Windows shell.           |
-| `reveal.rs`                  | `shell`       | Starts Explorer and selects a path.                                |
+| `open.rs`                    | `shell`       | Opens a URL through the Windows shell after printing a note.       |
+| `reveal.rs`                  | `shell`       | Starts Explorer and selects an existing file without modifying it. |
 | `run_with_verb.rs`           | `elevation`   | Starts a command through a shell verb.                             |
 | `is_elevated.rs`             | `elevation`   | Checks whether the current process is elevated.                    |
 | `restart_as_admin.rs`        | `elevation`   | May show UAC and start a new elevated process.                     |
@@ -45,8 +45,10 @@ cargo run --no-default-features --features shortcuts --example shortcuts
 
 ## UI And Side Effects
 
-- Shell and Explorer examples may open windows or registered handlers.
+- Shell and Explorer examples print a note first, then may open windows or registered
+  handlers.
 - Elevation examples may show UAC or start another process.
 - Shortcut examples write files to a temp location and clean up after themselves.
 - Recycle Bin examples create a temp file and move it to the Recycle Bin.
-- Path and single-instance examples avoid visible shell UI.
+- Path and single-instance examples avoid visible shell UI and do not create/delete
+  files.

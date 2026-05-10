@@ -1,6 +1,7 @@
 fn main() -> Result<(), win_desktop_utils::Error> {
-    win_desktop_utils::show_properties(r"C:\Windows\notepad.exe")?;
-    win_desktop_utils::open_containing_folder(r"C:\Windows\notepad.exe")?;
-    win_desktop_utils::open_url(" https://www.rust-lang.org ")?;
+    println!("opening a URL through the Windows shell");
+    println!("this may switch focus or open a browser tab/window");
+    win_desktop_utils::open_url("https://docs.rs/win-desktop-utils")?;
+
     Ok(())
 }
